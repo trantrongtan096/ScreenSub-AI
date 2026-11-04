@@ -1,4 +1,7 @@
-paddleocr>=2.7.0
-paddlepaddle>=2.5.0
+rapidocr_onnxruntime>=1.4.0
+onnxruntime>=1.17.0
 pillow>=10.0.0
 numpy>=1.24.0
+# Optional: Native paddleocr / paddlepaddle
+# paddleocr>=2.7.0
+# paddlepaddle>=2.5.0
