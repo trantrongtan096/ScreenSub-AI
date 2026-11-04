@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/ScreenSub.Capture/ScreenSub.Capture.csproj" />
+    <Project Path="src/ScreenSub.Core/ScreenSub.Core.csproj" />
+    <Project Path="src/ScreenSub.Desktop/ScreenSub.Desktop.csproj" />
+    <Project Path="src/ScreenSub.Infrastructure/ScreenSub.Infrastructure.csproj" />
+    <Project Path="src/ScreenSub.Ocr/ScreenSub.Ocr.csproj" />
+    <Project Path="src/ScreenSub.Overlay/ScreenSub.Overlay.csproj" />
+    <Project Path="src/ScreenSub.Translation/ScreenSub.Translation.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/IntegrationTests/IntegrationTests.csproj" />
+    <Project Path="tests/UnitTests/UnitTests.csproj" />
+  </Folder>
+</Solution>

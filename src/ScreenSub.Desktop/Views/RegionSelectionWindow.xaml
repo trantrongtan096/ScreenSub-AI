@@ -1,0 +1,71 @@
+<Window x:Class="ScreenSub.Desktop.Views.RegionSelectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Chọn vùng màn hình (ScreenSub AI)"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="#5505070E"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Cursor="Cross"
+        Focusable="True"
+        Loaded="OnLoaded"
+        KeyDown="OnKeyDown"
+        MouseDown="OnMouseDown"
+        MouseMove="OnMouseMove"
+        MouseUp="OnMouseUp">
+
+    <Canvas x:Name="SelectionCanvas">
+        <!-- Selection Rectangle -->
+        <Border x:Name="SelectionBox"
+                BorderBrush="#06B6D4"
+                BorderThickness="2"
+                Background="#2006B6D4"
+                CornerRadius="3"
+                Visibility="Collapsed">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="SnapsToDevicePixels" Value="True" />
+                </Style>
+            </Border.Style>
+        </Border>
+
+        <!-- Dimension Tag Badge -->
+        <Border x:Name="DimensionBadge"
+                Background="#1E293B"
+                BorderBrush="#06B6D4"
+                BorderThickness="1"
+                CornerRadius="6"
+                Padding="8,4"
+                Visibility="Collapsed">
+            <TextBlock x:Name="DimensionText"
+                       Text="0 × 0 px"
+                       Foreground="#F8FAFC"
+                       FontSize="13"
+                       FontWeight="SemiBold"
+                       FontFamily="Segoe UI" />
+        </Border>
+
+        <!-- Instruction Overlay -->
+        <Border HorizontalAlignment="Center"
+                VerticalAlignment="Top"
+                Canvas.Left="40"
+                Canvas.Top="40"
+                Background="#E60F172A"
+                BorderBrush="#334155"
+                BorderThickness="1"
+                CornerRadius="10"
+                Padding="16,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="✂ Kéo chuột trái để chọn vùng nhận diện phụ đề"
+                           Foreground="#E2E8F0"
+                           FontSize="14"
+                           FontWeight="Medium" />
+                <TextBlock Text=" • " Foreground="#64748B" Margin="8,0" />
+                <TextBlock Text="Nhấn ESC để hủy"
+                           Foreground="#94A3B8"
+                           FontSize="14" />
+            </StackPanel>
+        </Border>
+    </Canvas>
+</Window>
