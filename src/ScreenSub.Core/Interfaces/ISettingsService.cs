@@ -10,3 +10,4 @@ public interface ISettingsService
     string GetSecret(string key);
     void SetSecret(string key, string value);
 }
+

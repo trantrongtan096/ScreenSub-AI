@@ -11,6 +11,7 @@
         Focusable="True"
         Loaded="OnLoaded"
         KeyDown="OnKeyDown"
+        PreviewKeyDown="OnKeyDown"
         MouseDown="OnMouseDown"
         MouseMove="OnMouseMove"
         MouseUp="OnMouseUp">
@@ -69,3 +70,4 @@
         </Border>
     </Canvas>
 </Window>
+

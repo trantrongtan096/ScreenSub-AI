@@ -61,3 +61,4 @@ public class TextNormalizerTests
         c2.Should().BeFalse();
     }
 }
+

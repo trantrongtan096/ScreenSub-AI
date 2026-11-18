@@ -21,9 +21,13 @@ public sealed class TranslationResult
     public DateTime Timestamp { get; set; } = DateTime.UtcNow;
     public bool IsFromCache { get; set; }
     public string ProviderName { get; set; } = string.Empty;
+    public string ModelUsed { get; set; } = string.Empty;
+    public string ModelFingerprint { get; set; } = string.Empty;
+    public bool UsedFallbackModel { get; set; }
 
     public string GetTranslation(TargetLanguage lang)
     {
         return Translations.TryGetValue(lang, out var val) ? val : string.Empty;
     }
 }
+

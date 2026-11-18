@@ -7,6 +7,7 @@ public interface IOcrEngine : IAsyncDisposable
 {
     string EngineName { get; }
     ServiceStatus Status { get; }
+    string StatusMessage { get; }
     Task InitializeAsync(CancellationToken ct = default);
     Task<OcrResult> RecognizeAsync(byte[] imageBytes, CancellationToken ct = default);
 }

@@ -1,0 +1,2617 @@
+{
+  "total_sentences": 130,
+  "baseline": {
+    "mean_latency_ms": 214.1029646154213,
+    "p50_latency_ms": 199.46100000015576,
+    "p95_latency_ms": 391.1348949986859,
+    "results": [
+      {
+        "index": 0,
+        "text": "We're just having a drink.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Chúng ta chỉ có một cái uống.",
+        "raw": "Chúng ta chỉ có một cái uống.",
+        "latency_ms": 220.99449999950593
+      },
+      {
+        "index": 1,
+        "text": "What's going on here?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Chuyện gì đang diễn ra ở đây?",
+        "raw": "Chuyện gì đang diễn ra ở đây?",
+        "latency_ms": 191.2838999996893
+      },
+      {
+        "index": 2,
+        "text": "You've got to be kidding me.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Anh phải gõ tôi.",
+        "raw": "Anh phải gõ tôi.",
+        "latency_ms": 178.1515999991825
+      },
+      {
+        "index": 3,
+        "text": "I'll take care of it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi sẽ chăm sóc nó.",
+        "raw": "Tôi sẽ chăm sóc nó.",
+        "latency_ms": 157.48680000069726
+      },
+      {
+        "index": 4,
+        "text": "That's not what I meant.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Không phải đó là điều tôi có ý nghĩa.",
+        "raw": "Không phải đó là điều tôi có ý nghĩa.",
+        "latency_ms": 258.7086999992607
+      },
+      {
+        "index": 5,
+        "text": "Hold on a second.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Giữ một giây.",
+        "raw": "Giữ một giây.",
+        "latency_ms": 175.32179999943764
+      },
+      {
+        "index": 6,
+        "text": "Never mind.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Đừng bao giờ nghĩ",
+        "raw": "Đừng bao giờ nghĩ",
+        "latency_ms": 152.4319000000105
+      },
+      {
+        "index": 7,
+        "text": "How are you doing today?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hôm nay anh làm gì?",
+        "raw": "Hôm nay anh làm gì?",
+        "latency_ms": 199.3694000011601
+      },
+      {
+        "index": 8,
+        "text": "I don't think so.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi không nghĩ như vậy.",
+        "raw": "Tôi không nghĩ như vậy.",
+        "latency_ms": 158.87540000039735
+      },
+      {
+        "index": 9,
+        "text": "Come on, let's go.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hãy tiếp tục, chúng ta đi.",
+        "raw": "Hãy tiếp tục, chúng ta đi.",
+        "latency_ms": 234.39280000093277
+      },
+      {
+        "index": 10,
+        "text": "Are you out of your mind?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bạn đã ra khỏi tâm trí của mình chưa?",
+        "raw": "Bạn đã ra khỏi tâm trí của mình chưa?",
+        "latency_ms": 295.83740000089165
+      },
+      {
+        "index": 11,
+        "text": "Give me a break.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Cho em một khoảng cách",
+        "raw": "Cho em một khoảng cách",
+        "latency_ms": 179.66119999982766
+      },
+      {
+        "index": 12,
+        "text": "I have no idea.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi không có ý tưởng.",
+        "raw": "Tôi không có ý tưởng.",
+        "latency_ms": 173.15659999985655
+      },
+      {
+        "index": 13,
+        "text": "It's up to you.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Nó là phụ thuộc vào bạn.",
+        "raw": "Nó là phụ thuộc vào bạn.",
+        "latency_ms": 213.65270000023884
+      },
+      {
+        "index": 14,
+        "text": "Don't worry about it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Đừng lo về nó.",
+        "raw": "Đừng lo về nó.",
+        "latency_ms": 199.7148999998899
+      },
+      {
+        "index": 15,
+        "text": "Can I get you something to drink?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi có thể cho bạn một cái gì đó để uống không?",
+        "raw": "Tôi có thể cho bạn một cái gì đó để uống không?",
+        "latency_ms": 344.9556000014127
+      },
+      {
+        "index": 16,
+        "text": "I'm so glad to see you.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi rất vui khi thấy anh.",
+        "raw": "Tôi rất vui khi thấy anh.",
+        "latency_ms": 243.11969999871508
+      },
+      {
+        "index": 17,
+        "text": "What are you talking about?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bạn đang nói về gì?",
+        "raw": "Bạn đang nói về gì?",
+        "latency_ms": 209.41960000163817
+      },
+      {
+        "index": 18,
+        "text": "It doesn't make any sense.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Nó không có ý nghĩa gì cả.",
+        "raw": "Nó không có ý nghĩa gì cả.",
+        "latency_ms": 268.81800000046496
+      },
+      {
+        "index": 19,
+        "text": "Let's grab a bite to eat.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hãy lấy một cái nụ hôn để ăn.",
+        "raw": "Hãy lấy một cái nụ hôn để ăn.",
+        "latency_ms": 285.5999999992491
+      },
+      {
+        "index": 20,
+        "text": "I'm on my way.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi đang trên con đường của mình.",
+        "raw": "Tôi đang trên con đường của mình.",
+        "latency_ms": 188.30519999937678
+      },
+      {
+        "index": 21,
+        "text": "Keep in touch.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "giữ liên lạc",
+        "raw": "giữ liên lạc",
+        "latency_ms": 108.55119999905583
+      },
+      {
+        "index": 22,
+        "text": "Make yourself at home.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hãy tự mình làm ở nhà",
+        "raw": "Hãy tự mình làm ở nhà",
+        "latency_ms": 158.37009999995644
+      },
+      {
+        "index": 23,
+        "text": "I'll be right back.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi sẽ trở lại đúng cách.",
+        "raw": "Tôi sẽ trở lại đúng cách.",
+        "latency_ms": 163.614699999016
+      },
+      {
+        "index": 24,
+        "text": "See you later.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Xem anh sau này",
+        "raw": "Xem anh sau này",
+        "latency_ms": 109.22970000137866
+      },
+      {
+        "index": 25,
+        "text": "Let's have a look at this.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta hãy nhìn vào điều này.",
+        "raw": "Chúng ta hãy nhìn vào điều này.",
+        "latency_ms": 176.180899999963
+      },
+      {
+        "index": 26,
+        "text": "Please have a seat.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Xin hãy có chỗ ngồi.",
+        "raw": "Xin hãy có chỗ ngồi.",
+        "latency_ms": 159.5099999995
+      },
+      {
+        "index": 27,
+        "text": "Take a look at the window.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy nhìn vào cửa sổ.",
+        "raw": "Hãy nhìn vào cửa sổ.",
+        "latency_ms": 201.74109999970824
+      },
+      {
+        "index": 28,
+        "text": "I need to take a shower.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi cần phải tắm.",
+        "raw": "Tôi cần phải tắm.",
+        "latency_ms": 183.94140000054904
+      },
+      {
+        "index": 29,
+        "text": "Let's take a break.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta hãy nghỉ ngơi.",
+        "raw": "Chúng ta hãy nghỉ ngơi.",
+        "latency_ms": 208.47330000106012
+      },
+      {
+        "index": 30,
+        "text": "We need to make a decision now.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta cần đưa ra quyết định ngay bây giờ.",
+        "raw": "Chúng ta cần đưa ra quyết định ngay bây giờ.",
+        "latency_ms": 286.4914999991015
+      },
+      {
+        "index": 31,
+        "text": "Can you give me a hand?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "- Anh có thể cho em một bàn tay không?",
+        "raw": "- Anh có thể cho em một bàn tay không?",
+        "latency_ms": 298.16029999892635
+      },
+      {
+        "index": 32,
+        "text": "Please pay attention to the screen.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Xin chú ý đến màn hình.",
+        "raw": "Xin chú ý đến màn hình.",
+        "latency_ms": 178.60950000067533
+      },
+      {
+        "index": 33,
+        "text": "Have a good time tonight.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy có một thời gian tốt đêm nay.",
+        "raw": "Hãy có một thời gian tốt đêm nay.",
+        "latency_ms": 232.53189999923052
+      },
+      {
+        "index": 34,
+        "text": "Take your time, there is no rush.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy dành thời gian, không có vội vàng.",
+        "raw": "Hãy dành thời gian, không có vội vàng.",
+        "latency_ms": 248.093099999096
+      },
+      {
+        "index": 35,
+        "text": "He took a deep breath before speaking.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Anh ta thở sâu trước khi nói chuyện.",
+        "raw": "Anh ta thở sâu trước khi nói chuyện.",
+        "latency_ms": 241.01880000125675
+      },
+      {
+        "index": 36,
+        "text": "I'll have a coffee, please.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi sẽ có một cái cà phê, xin vui lòng.",
+        "raw": "Tôi sẽ có một cái cà phê, xin vui lòng.",
+        "latency_ms": 291.2536999992881
+      },
+      {
+        "index": 37,
+        "text": "Let's have dinner together.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta cùng nhau ăn tối.",
+        "raw": "Chúng ta cùng nhau ăn tối.",
+        "latency_ms": 185.54300000141666
+      },
+      {
+        "index": 38,
+        "text": "They made an appointment with the doctor.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Họ đã có một cuộc hẹn với bác sĩ.",
+        "raw": "Họ đã có một cuộc hẹn với bác sĩ.",
+        "latency_ms": 240.19390000103158
+      },
+      {
+        "index": 39,
+        "text": "Take care of yourself.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy chăm sóc bản thân mình.",
+        "raw": "Hãy chăm sóc bản thân mình.",
+        "latency_ms": 211.94140000079642
+      },
+      {
+        "index": 40,
+        "text": "She made up her mind.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Cô ấy đã xây dựng tâm trí của mình.",
+        "raw": "Cô ấy đã xây dựng tâm trí của mình.",
+        "latency_ms": 240.76860000059241
+      },
+      {
+        "index": 41,
+        "text": "Have faith in yourself.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy tin vào chính mình.",
+        "raw": "Hãy tin vào chính mình.",
+        "latency_ms": 149.88420000008773
+      },
+      {
+        "index": 42,
+        "text": "We had a great conversation.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng tôi đã có một cuộc trò chuyện tuyệt vời.",
+        "raw": "Chúng tôi đã có một cuộc trò chuyện tuyệt vời.",
+        "latency_ms": 231.9509000008111
+      },
+      {
+        "index": 43,
+        "text": "Take a chance and try it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy lấy cơ hội và thử nó.",
+        "raw": "Hãy lấy cơ hội và thử nó.",
+        "latency_ms": 190.04860000131885
+      },
+      {
+        "index": 44,
+        "text": "I had a feeling something was wrong.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi cảm thấy có điều gì đó sai.",
+        "raw": "Tôi cảm thấy có điều gì đó sai.",
+        "latency_ms": 192.00249999994412
+      },
+      {
+        "index": 45,
+        "text": "What now?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Bây giờ là gì?",
+        "raw": "Bây giờ là gì?",
+        "latency_ms": 142.31829999880574
+      },
+      {
+        "index": 46,
+        "text": "Why not?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Tại sao không?",
+        "raw": "Tại sao không?",
+        "latency_ms": 108.12470000018948
+      },
+      {
+        "index": 47,
+        "text": "Really?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Thực sự ?",
+        "raw": "Thực sự ?",
+        "latency_ms": 93.90370000073744
+      },
+      {
+        "index": 48,
+        "text": "Who's there?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Ai ở đó?",
+        "raw": "Ai ở đó?",
+        "latency_ms": 111.96790000030887
+      },
+      {
+        "index": 49,
+        "text": "Are you ready?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Bạn đã sẵn sàng?",
+        "raw": "Bạn đã sẵn sàng?",
+        "latency_ms": 132.2202000010293
+      },
+      {
+        "index": 50,
+        "text": "How come?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Làm sao đến?",
+        "raw": "Làm sao đến?",
+        "latency_ms": 131.1015999999654
+      },
+      {
+        "index": 51,
+        "text": "What happened?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Chuyện gì xảy ra?",
+        "raw": "Chuyện gì xảy ra?",
+        "latency_ms": 255.87499999892316
+      },
+      {
+        "index": 52,
+        "text": "Is that so?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Có phải như vậy?",
+        "raw": "Có phải như vậy?",
+        "latency_ms": 148.46450000004552
+      },
+      {
+        "index": 53,
+        "text": "Where were we?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Chúng ta ở đâu?",
+        "raw": "Chúng ta ở đâu?",
+        "latency_ms": 149.28210000107356
+      },
+      {
+        "index": 54,
+        "text": "What's new?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "mới là gì?",
+        "raw": "mới là gì?",
+        "latency_ms": 126.01009999889357
+      },
+      {
+        "index": 55,
+        "text": "No way!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Không có cách nào!",
+        "raw": "Không có cách nào!",
+        "latency_ms": 150.5059999999503
+      },
+      {
+        "index": 56,
+        "text": "Of course!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Tất nhiên !",
+        "raw": "Tất nhiên !",
+        "latency_ms": 110.73219999889261
+      },
+      {
+        "index": 57,
+        "text": "Good job!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Công việc tốt!",
+        "raw": "Công việc tốt!",
+        "latency_ms": 139.10070000019914
+      },
+      {
+        "index": 58,
+        "text": "Come on!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Hãy tiếp!",
+        "raw": "Hãy tiếp!",
+        "latency_ms": 127.91920000017853
+      },
+      {
+        "index": 59,
+        "text": "Watch out!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Xem ra ngoài!",
+        "raw": "Xem ra ngoài!",
+        "latency_ms": 149.24470000005385
+      },
+      {
+        "index": 60,
+        "text": "with communities across Southeast Asia.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "với các cộng đồng trên khắp Đông Nam Á.",
+        "raw": "với các cộng đồng trên khắp Đông Nam Á.",
+        "latency_ms": 265.59160000033444
+      },
+      {
+        "index": 61,
+        "text": "The mountain roads twisted across the rugged valley.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Các con đường núi xoay quanh thung lũng sét.",
+        "raw": "Các con đường núi xoay quanh thung lũng sét.",
+        "latency_ms": 421.04549999930896
+      },
+      {
+        "index": 62,
+        "text": "Even though it was raining heavily, they decided to continue the journey.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Mặc dù mưa rất nhiều, họ quyết định tiếp tục hành trình.",
+        "raw": "Mặc dù mưa rất nhiều, họ quyết định tiếp tục hành trình.",
+        "latency_ms": 387.81789999848115
+      },
+      {
+        "index": 63,
+        "text": "If you have any questions, feel free to ask me anytime.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Nếu bạn có bất kỳ câu hỏi nào, hãy tự do hỏi tôi bất cứ lúc nào.",
+        "raw": "Nếu bạn có bất kỳ câu hỏi nào, hãy tự do hỏi tôi bất cứ lúc nào.",
+        "latency_ms": 552.5318999989395
+      },
+      {
+        "index": 64,
+        "text": "The technology developed rapidly over the past few decades.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Công nghệ phát triển nhanh chóng trong vài thập kỷ qua.",
+        "raw": "Công nghệ phát triển nhanh chóng trong vài thập kỷ qua.",
+        "latency_ms": 304.4953999997233
+      },
+      {
+        "index": 65,
+        "text": "She told him that she would arrive before midnight.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Cô ấy nói với cô ấy rằng cô ấy sẽ đến trước nửa đêm.",
+        "raw": "Cô ấy nói với cô ấy rằng cô ấy sẽ đến trước nửa đêm.",
+        "latency_ms": 340.6861999992543
+      },
+      {
+        "index": 66,
+        "text": "Although he was exhausted, he finished the report on time.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Mặc dù ông ta đã bị tiêu chảy, nhưng ông đã hoàn thành báo cáo kịp thời.",
+        "raw": "Mặc dù ông ta đã bị tiêu chảy, nhưng ông đã hoàn thành báo cáo kịp thời.",
+        "latency_ms": 583.9026000012382
+      },
+      {
+        "index": 67,
+        "text": "We need to find a sustainable solution for future generations.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Chúng ta cần tìm ra một giải pháp bền vững cho các thế hệ trong tương lai.",
+        "raw": "Chúng ta cần tìm ra một giải pháp bền vững cho các thế hệ trong tương lai.",
+        "latency_ms": 468.0494999993243
+      },
+      {
+        "index": 68,
+        "text": "The view from the top of the hill was breathtaking.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Khung cảnh từ đỉnh đồi là rất hấp dẫn.",
+        "raw": "Khung cảnh từ đỉnh đồi là rất hấp dẫn.",
+        "latency_ms": 325.7326999992074
+      },
+      {
+        "index": 69,
+        "text": "They worked together to overcome every obstacle they faced.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Họ đã làm việc cùng nhau để vượt qua mọi trở ngại mà họ phải đối mặt.",
+        "raw": "Họ đã làm việc cùng nhau để vượt qua mọi trở ngại mà họ phải đối mặt.",
+        "latency_ms": 395.1889999989362
+      },
+      {
+        "index": 70,
+        "text": "我们只是随便聊聊。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng tôi chỉ nói chuyện.",
+        "raw": "Chúng tôi chỉ nói chuyện.",
+        "latency_ms": 169.21779999938735
+      },
+      {
+        "index": 71,
+        "text": "你到底想说什么？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Bạn muốn nói gì?",
+        "raw": "Bạn muốn nói gì?",
+        "latency_ms": 137.2668000003614
+      },
+      {
+        "index": 72,
+        "text": "事情没有你想的那么简单。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Mọi thứ không đơn giản như bạn nghĩ.",
+        "raw": "Mọi thứ không đơn giản như bạn nghĩ.",
+        "latency_ms": 226.51310000037483
+      },
+      {
+        "index": 73,
+        "text": "山路一路蜿蜒，",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đường núi, đường núi",
+        "raw": "Đường núi, đường núi",
+        "latency_ms": 143.76639999863983
+      },
+      {
+        "index": 74,
+        "text": "你要去哪里？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Bạn sẽ đi đâu?",
+        "raw": "Bạn sẽ đi đâu?",
+        "latency_ms": 132.51660000059928
+      },
+      {
+        "index": 75,
+        "text": "今天晚上你有空吗？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "- Hôm nay anh có chỗ không?",
+        "raw": "- Hôm nay anh có chỗ không?",
+        "latency_ms": 203.382400000919
+      },
+      {
+        "index": 76,
+        "text": "不要放在心上，没关系的。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đừng nhắm vào tâm trí, không sao.",
+        "raw": "Đừng nhắm vào tâm trí, không sao.",
+        "latency_ms": 246.32460000066203
+      },
+      {
+        "index": 77,
+        "text": "我们抓住这次难得的发展机遇。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng tôi đã nắm lấy cơ hội phát triển khó khăn này.",
+        "raw": "Chúng tôi đã nắm lấy cơ hội phát triển khó khăn này.",
+        "latency_ms": 297.44299999947543
+      },
+      {
+        "index": 78,
+        "text": "真是太不可思议了！",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Thật là đáng kinh ngạc!",
+        "raw": "Thật là đáng kinh ngạc!",
+        "latency_ms": 230.5577999995876
+      },
+      {
+        "index": 79,
+        "text": "快点，我们马上就要迟到了。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Nhanh chóng, chúng ta sẽ sớm muộn.",
+        "raw": "Nhanh chóng, chúng ta sẽ sớm muộn.",
+        "latency_ms": 273.26279999942926
+      },
+      {
+        "index": 80,
+        "text": "我想一个人静一静。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tôi muốn một mình yên tĩnh.",
+        "raw": "Tôi muốn một mình yên tĩnh.",
+        "latency_ms": 182.76700000023993
+      },
+      {
+        "index": 81,
+        "text": "这件事情交给我来处理吧。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Hãy cho tôi giải quyết vấn đề này.",
+        "raw": "Hãy cho tôi giải quyết vấn đề này.",
+        "latency_ms": 215.76940000159084
+      },
+      {
+        "index": 82,
+        "text": "你怎么现在才来？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Sao anh mới đến bây giờ?",
+        "raw": "Sao anh mới đến bây giờ?",
+        "latency_ms": 157.4471000003541
+      },
+      {
+        "index": 83,
+        "text": "不管发生什么事，我都会支持你。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Dù có gì xảy ra, tôi sẽ ủng hộ bạn.",
+        "raw": "Dù có gì xảy ra, tôi sẽ ủng hộ bạn.",
+        "latency_ms": 273.5178000002634
+      },
+      {
+        "index": 84,
+        "text": "時間不早了，我們該回去了。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Thời gian không quá sớm, chúng tôi phải trở lại.",
+        "raw": "Thời gian không quá sớm, chúng tôi phải trở lại.",
+        "latency_ms": 258.814100001473
+      },
+      {
+        "index": 85,
+        "text": "這件事我真的不知道。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tôi thực sự không biết điều này.",
+        "raw": "Tôi thực sự không biết điều này.",
+        "latency_ms": 185.3964999991149
+      },
+      {
+        "index": 86,
+        "text": "山路盤旋而上，景色十分壯觀。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đỉnh núi, nhìn thấy rất đẹp.",
+        "raw": "Đỉnh núi, nhìn thấy rất đẹp.",
+        "latency_ms": 226.7692999994324
+      },
+      {
+        "index": 87,
+        "text": "你今天的心情看起來很不錯。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tâm trạng của bạn ngày hôm nay trông rất tệ.",
+        "raw": "Tâm trạng của bạn ngày hôm nay trông rất tệ.",
+        "latency_ms": 272.3454999995738
+      },
+      {
+        "index": 88,
+        "text": "我們一起努力，一定可以成功的。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng ta cùng nhau làm việc và chắc chắn sẽ thành công.",
+        "raw": "Chúng ta cùng nhau làm việc và chắc chắn sẽ thành công.",
+        "latency_ms": 413.15190000022994
+      },
+      {
+        "index": 89,
+        "text": "請稍等片刻，馬上就好。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Xin hãy chờ một chút, ngay lập tức.",
+        "raw": "Xin hãy chờ một chút, ngay lập tức.",
+        "latency_ms": 258.9981999990414
+      },
+      {
+        "index": 90,
+        "text": "Bọn mình chỉ đang uống chút nước thôi.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "We just drink a little water.",
+        "raw": "We just drink a little water.",
+        "latency_ms": 195.92589999956544
+      },
+      {
+        "index": 91,
+        "text": "Hôm nay bạn thấy thế nào?",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "How do you feel today?",
+        "raw": "How do you feel today?",
+        "latency_ms": 199.55259999915143
+      },
+      {
+        "index": 92,
+        "text": "Đừng bận tâm về chuyện đó nhé.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Don’t worry about that.",
+        "raw": "Don’t worry about that.",
+        "latency_ms": 233.00659999949858
+      },
+      {
+        "index": 93,
+        "text": "Tôi sẽ lo liệu việc này.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "I will take care of this.",
+        "raw": "I will take care of this.",
+        "latency_ms": 222.80739999951038
+      },
+      {
+        "index": 94,
+        "text": "Ý tôi không phải như vậy đâu.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "I mean not that.",
+        "raw": "I mean not that.",
+        "latency_ms": 167.62460000063584
+      },
+      {
+        "index": 95,
+        "text": "Chờ một lát, tôi quay lại ngay.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Wait a moment, I will come back.",
+        "raw": "Wait a moment, I will come back.",
+        "latency_ms": 236.80310000054305
+      },
+      {
+        "index": 96,
+        "text": "Thời tiết hôm nay thật dễ chịu.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "The weather today is nice.",
+        "raw": "The weather today is nice.",
+        "latency_ms": 176.6778000001068
+      },
+      {
+        "index": 97,
+        "text": "Chúng ta cùng nhau vượt qua khó khăn này.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Together we overcome this difficulty.",
+        "raw": "Together we overcome this difficulty.",
+        "latency_ms": 217.1247999995103
+      },
+      {
+        "index": 98,
+        "text": "Cậu đang đùa mình đấy à?",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Are you joking with me?",
+        "raw": "Are you joking with me?",
+        "latency_ms": 200.84630000019388
+      },
+      {
+        "index": 99,
+        "text": "Những con đường núi quanh co uốn lượn.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "The mountainous roads around are shining.",
+        "raw": "The mountainous roads around are shining.",
+        "latency_ms": 327.15450000068813
+      },
+      {
+        "index": 100,
+        "text": "Xin chào, rất vui được gặp bạn.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "你好,很高兴见到你。",
+        "raw": "你好,很高兴见到你。",
+        "latency_ms": 245.8721000002697
+      },
+      {
+        "index": 101,
+        "text": "Hôm nay bạn có rảnh không?",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "今天你有时间吗?",
+        "raw": "今天你有时间吗?",
+        "latency_ms": 225.04180000032648
+      },
+      {
+        "index": 102,
+        "text": "Chúc bạn một ngày tốt lành!",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "祝你好的一天!",
+        "raw": "祝你好的一天!",
+        "latency_ms": 211.15669999926467
+      },
+      {
+        "index": 103,
+        "text": "Cảm ơn bạn rất nhiều vì đã giúp đỡ.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "非常感谢你帮忙。",
+        "raw": "非常感谢你帮忙。",
+        "latency_ms": 196.1868999987928
+      },
+      {
+        "index": 104,
+        "text": "Mọi chuyện rồi sẽ ổn thôi.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "事情就好了。",
+        "raw": "事情就好了。",
+        "latency_ms": 130.9625000012602
+      },
+      {
+        "index": 105,
+        "text": "Tôi không nghĩ mọi chuyện lại đơn giản như thế.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "我不认为事情如此简单。",
+        "raw": "我不认为事情如此简单。",
+        "latency_ms": 156.52479999880597
+      },
+      {
+        "index": 106,
+        "text": "Chúng ta đi ăn tối cùng nhau nhé.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "让我们一起吃晚饭吧。",
+        "raw": "让我们一起吃晚饭吧。",
+        "latency_ms": 207.70579999953043
+      },
+      {
+        "index": 107,
+        "text": "Bạn muốn uống trà hay cà phê?",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "你想喝茶或咖啡吗?",
+        "raw": "你想喝茶或咖啡吗?",
+        "latency_ms": 268.0102000012994
+      },
+      {
+        "index": 108,
+        "text": "Tôi hiểu ý của bạn rồi.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "我明白你的意思。",
+        "raw": "我明白你的意思。",
+        "latency_ms": 118.7222999997175
+      },
+      {
+        "index": 109,
+        "text": "Hẹn gặp lại bạn vào ngày mai nhé.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "明天再见你了。",
+        "raw": "明天再见你了。",
+        "latency_ms": 181.94629999925382
+      },
+      {
+        "index": 110,
+        "text": "Good morning, have a nice day!",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "早安,好日子!",
+        "raw": "早安,好日子!",
+        "latency_ms": 168.27749999902153
+      },
+      {
+        "index": 111,
+        "text": "What are you doing tonight?",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "今天晚上你在做什么?",
+        "raw": "今天晚上你在做什么?",
+        "latency_ms": 171.89839999991818
+      },
+      {
+        "index": 112,
+        "text": "I completely agree with your opinion.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "我完全同意你的观点。",
+        "raw": "我完全同意你的观点。",
+        "latency_ms": 159.79890000016894
+      },
+      {
+        "index": 113,
+        "text": "Please take a seat and wait a moment.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "请坐下来等一会儿。",
+        "raw": "请坐下来等一会儿。",
+        "latency_ms": 191.85230000039155
+      },
+      {
+        "index": 114,
+        "text": "Are you sure about this?",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "你对此确信吗?",
+        "raw": "你对此确信吗?",
+        "latency_ms": 139.66030000119645
+      },
+      {
+        "index": 115,
+        "text": "Let's work together to finish the project.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "让我们一起努力完成项目。",
+        "raw": "让我们一起努力完成项目。",
+        "latency_ms": 158.366700001352
+      },
+      {
+        "index": 116,
+        "text": "Thank you for your valuable support.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "感谢您的宝贵支持。",
+        "raw": "感谢您的宝贵支持。",
+        "latency_ms": 155.02340000057302
+      },
+      {
+        "index": 117,
+        "text": "The sunset over the ocean was beautiful.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "海上阳光下落的太阳很美好。",
+        "raw": "海上阳光下落的太阳很美好。",
+        "latency_ms": 271.38100000047416
+      },
+      {
+        "index": 118,
+        "text": "Don't worry, everything will be fine.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "不要担心,一切都好。",
+        "raw": "不要担心,一切都好。",
+        "latency_ms": 187.15720000000147
+      },
+      {
+        "index": 119,
+        "text": "See you at the conference tomorrow.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "明天在会议上见到你。",
+        "raw": "明天在会议上见到你。",
+        "latency_ms": 202.68039999973553
+      },
+      {
+        "index": 120,
+        "text": "今天天气真好，我们出去散步吧。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "We are good today, let’s go on a walk.",
+        "raw": "We are good today, let’s go on a walk.",
+        "latency_ms": 258.45079999999143
+      },
+      {
+        "index": 121,
+        "text": "你明白我的意思吗？",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Do you understand what I mean?",
+        "raw": "Do you understand what I mean?",
+        "latency_ms": 156.37520000018412
+      },
+      {
+        "index": 122,
+        "text": "这是一次非常难忘的经历。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "This is a very unforgettable experience.",
+        "raw": "This is a very unforgettable experience.",
+        "latency_ms": 211.45419999993464
+      },
+      {
+        "index": 123,
+        "text": "请问洗手间在哪里？",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Where is the toilet?",
+        "raw": "Where is the toilet?",
+        "latency_ms": 129.3457000010676
+      },
+      {
+        "index": 124,
+        "text": "很高兴能在这里见到大家。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I am glad to see everyone here.",
+        "raw": "I am glad to see everyone here.",
+        "latency_ms": 184.26220000037574
+      },
+      {
+        "index": 125,
+        "text": "这件事我们以后再慢慢商量。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "We will slowly discuss this later.",
+        "raw": "We will slowly discuss this later.",
+        "latency_ms": 175.48440000064147
+      },
+      {
+        "index": 126,
+        "text": "大家辛苦了，今天就到这里吧。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Everyone is hard, come here today.",
+        "raw": "Everyone is hard, come here today.",
+        "latency_ms": 182.08600000070874
+      },
+      {
+        "index": 127,
+        "text": "我赞同你的看法。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I agree with your opinion.",
+        "raw": "I agree with your opinion.",
+        "latency_ms": 138.37340000100085
+      },
+      {
+        "index": 128,
+        "text": "无论如何，请务必注意安全。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "In any case, be careful for safety.",
+        "raw": "In any case, be careful for safety.",
+        "latency_ms": 207.02689999961876
+      },
+      {
+        "index": 129,
+        "text": "祝你旅途愉快，一路顺风！",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I wish you a happy journey, a good way!",
+        "raw": "I wish you a happy journey, a good way!",
+        "latency_ms": 220.37420000015118
+      }
+    ]
+  },
+  "optimized": {
+    "mean_latency_ms": 237.63376153852172,
+    "p50_latency_ms": 223.28124999967258,
+    "p95_latency_ms": 419.342494999637,
+    "results": [
+      {
+        "index": 0,
+        "text": "We're just having a drink.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bọn mình chỉ đang uống chút gì đó thôi.",
+        "raw": "Chúng ta chỉ có một cái gì đó để uống.",
+        "latency_ms": 348.46769999967364
+      },
+      {
+        "index": 1,
+        "text": "What's going on here?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Chuyện gì đang diễn ra ở đây?",
+        "raw": "Chuyện gì đang diễn ra ở đây?",
+        "latency_ms": 229.25910000049043
+      },
+      {
+        "index": 2,
+        "text": "You've got to be kidding me.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bạn chắc đang nói đùa.",
+        "raw": "Bạn phải nói đùa.",
+        "latency_ms": 172.6010000002134
+      },
+      {
+        "index": 3,
+        "text": "I'll take care of it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi sẽ xử lý nó.",
+        "raw": "Tôi sẽ xử lý nó.",
+        "latency_ms": 161.40319999976782
+      },
+      {
+        "index": 4,
+        "text": "That's not what I meant.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Đó không phải là điều tôi muốn nói.",
+        "raw": "Đó không phải là điều tôi muốn nói.",
+        "latency_ms": 285.3343999995559
+      },
+      {
+        "index": 5,
+        "text": "Hold on a second.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "chờ một lát.",
+        "raw": "chờ một phút.",
+        "latency_ms": 151.15239999977348
+      },
+      {
+        "index": 6,
+        "text": "Never mind.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Đừng lo về nó.",
+        "raw": "Đừng lo về nó.",
+        "latency_ms": 223.28589999960968
+      },
+      {
+        "index": 7,
+        "text": "How are you doing today?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hôm nay anh cảm thấy thế nào?",
+        "raw": "Hôm nay anh cảm thấy thế nào?",
+        "latency_ms": 297.53470000105153
+      },
+      {
+        "index": 8,
+        "text": "I don't think so.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi không nghĩ như vậy.",
+        "raw": "Tôi không nghĩ như vậy.",
+        "latency_ms": 201.07020000068587
+      },
+      {
+        "index": 9,
+        "text": "Come on, let's go.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hãy tiếp tục, chúng ta hãy đi.",
+        "raw": "Hãy tiếp tục, chúng ta hãy đi.",
+        "latency_ms": 266.4706000014121
+      },
+      {
+        "index": 10,
+        "text": "Are you out of your mind?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bạn đã ra khỏi tâm trí của mình chưa?",
+        "raw": "Bạn đã ra khỏi tâm trí của mình chưa?",
+        "latency_ms": 247.80760000066948
+      },
+      {
+        "index": 11,
+        "text": "Give me a break.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Hãy cho tôi nghỉ ngơi.",
+        "raw": "Hãy cho tôi nghỉ ngơi.",
+        "latency_ms": 188.26699999954144
+      },
+      {
+        "index": 12,
+        "text": "I have no idea.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi không có ý tưởng.",
+        "raw": "Tôi không có ý tưởng.",
+        "latency_ms": 177.4609000003693
+      },
+      {
+        "index": 13,
+        "text": "It's up to you.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Nó là phụ thuộc vào bạn.",
+        "raw": "Nó là phụ thuộc vào bạn.",
+        "latency_ms": 221.9979000001331
+      },
+      {
+        "index": 14,
+        "text": "Don't worry about it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Đừng lo về nó.",
+        "raw": "Đừng lo về nó.",
+        "latency_ms": 223.27659999973548
+      },
+      {
+        "index": 15,
+        "text": "Can I get you something to drink?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi có thể cho bạn một cái gì đó để uống không?",
+        "raw": "Tôi có thể cho bạn một cái gì đó để uống không?",
+        "latency_ms": 446.349800000462
+      },
+      {
+        "index": 16,
+        "text": "I'm so glad to see you.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi rất vui khi thấy anh.",
+        "raw": "Tôi rất vui khi thấy anh.",
+        "latency_ms": 226.14550000071176
+      },
+      {
+        "index": 17,
+        "text": "What are you talking about?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Bạn đang nói về gì?",
+        "raw": "Bạn đang nói về gì?",
+        "latency_ms": 190.60019999960787
+      },
+      {
+        "index": 18,
+        "text": "It doesn't make any sense.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Nó không có ý nghĩa gì cả.",
+        "raw": "Nó không có ý nghĩa gì cả.",
+        "latency_ms": 232.03189999912865
+      },
+      {
+        "index": 19,
+        "text": "Let's grab a bite to eat.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Chúng ta hãy lấy một cú để ăn.",
+        "raw": "Chúng ta hãy lấy một cú để ăn.",
+        "latency_ms": 254.68589999945834
+      },
+      {
+        "index": 20,
+        "text": "I'm on my way.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi đang trên con đường của mình.",
+        "raw": "Tôi đang trên con đường của mình.",
+        "latency_ms": 272.94699999947625
+      },
+      {
+        "index": 21,
+        "text": "Keep in touch.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "giữ liên lạc.",
+        "raw": "giữ liên lạc.",
+        "latency_ms": 167.54670000045735
+      },
+      {
+        "index": 22,
+        "text": "Make yourself at home.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tự làm tại nhà.",
+        "raw": "Tự làm tại nhà.",
+        "latency_ms": 198.91309999911755
+      },
+      {
+        "index": 23,
+        "text": "I'll be right back.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Tôi sẽ trở lại đúng.",
+        "raw": "Tôi sẽ trở lại đúng.",
+        "latency_ms": 250.4908000009891
+      },
+      {
+        "index": 24,
+        "text": "See you later.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "everyday_dialogue",
+        "translation": "Anh sẽ gặp em sau.",
+        "raw": "Anh sẽ gặp em sau.",
+        "latency_ms": 227.25759999957518
+      },
+      {
+        "index": 25,
+        "text": "Let's have a look at this.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta hãy nhìn vào điều này.",
+        "raw": "Chúng ta hãy nhìn vào điều này.",
+        "latency_ms": 248.18039999991015
+      },
+      {
+        "index": 26,
+        "text": "Please have a seat.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Vui lòng có chỗ ngồi.",
+        "raw": "Vui lòng có chỗ ngồi.",
+        "latency_ms": 210.8871000000363
+      },
+      {
+        "index": 27,
+        "text": "Take a look at the window.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy nhìn vào cửa sổ.",
+        "raw": "Hãy nhìn vào cửa sổ.",
+        "latency_ms": 168.33500000029744
+      },
+      {
+        "index": 28,
+        "text": "I need to take a shower.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi cần phải tắm.",
+        "raw": "Tôi cần phải tắm.",
+        "latency_ms": 150.7833000014216
+      },
+      {
+        "index": 29,
+        "text": "Let's take a break.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta hãy nghỉ ngơi.",
+        "raw": "Chúng ta hãy nghỉ ngơi.",
+        "latency_ms": 223.49759999997332
+      },
+      {
+        "index": 30,
+        "text": "We need to make a decision now.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta cần đưa ra quyết định ngay bây giờ.",
+        "raw": "Chúng ta cần đưa ra quyết định ngay bây giờ.",
+        "latency_ms": 305.4093999999168
+      },
+      {
+        "index": 31,
+        "text": "Can you give me a hand?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Anh có thể cho tôi một bàn tay không?",
+        "raw": "Anh có thể cho tôi một bàn tay không?",
+        "latency_ms": 299.4046999992861
+      },
+      {
+        "index": 32,
+        "text": "Please pay attention to the screen.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Vui lòng chú ý đến màn hình",
+        "raw": "Vui lòng chú ý đến màn hình",
+        "latency_ms": 231.35180000099353
+      },
+      {
+        "index": 33,
+        "text": "Have a good time tonight.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy có một thời gian tốt đêm nay.",
+        "raw": "Hãy có một thời gian tốt đêm nay.",
+        "latency_ms": 255.95679999969434
+      },
+      {
+        "index": 34,
+        "text": "Take your time, there is no rush.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy dành thời gian, không có vội vàng.",
+        "raw": "Hãy dành thời gian, không có vội vàng.",
+        "latency_ms": 328.58350000060454
+      },
+      {
+        "index": 35,
+        "text": "He took a deep breath before speaking.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hắn thở sâu trước khi nói chuyện.",
+        "raw": "Hắn thở sâu trước khi nói chuyện.",
+        "latency_ms": 269.20570000038424
+      },
+      {
+        "index": 36,
+        "text": "I'll have a coffee, please.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi sẽ có cà phê, xin vui lòng.",
+        "raw": "Tôi sẽ có cà phê, xin vui lòng.",
+        "latency_ms": 291.45839999910095
+      },
+      {
+        "index": 37,
+        "text": "Let's have dinner together.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng ta cùng nhau ăn tối.",
+        "raw": "Chúng ta cùng nhau ăn tối.",
+        "latency_ms": 363.01300000013725
+      },
+      {
+        "index": 38,
+        "text": "They made an appointment with the doctor.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Họ đã có một cuộc hẹn với bác sĩ.",
+        "raw": "Họ đã có một cuộc hẹn với bác sĩ.",
+        "latency_ms": 307.9811999996309
+      },
+      {
+        "index": 39,
+        "text": "Take care of yourself.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy chăm sóc bản thân mình.",
+        "raw": "Hãy chăm sóc bản thân mình.",
+        "latency_ms": 211.84249999896565
+      },
+      {
+        "index": 40,
+        "text": "She made up her mind.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Cô ấy xây dựng tâm trí của mình.",
+        "raw": "Cô ấy xây dựng tâm trí của mình.",
+        "latency_ms": 265.51309999922523
+      },
+      {
+        "index": 41,
+        "text": "Have faith in yourself.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy tin vào chính mình.",
+        "raw": "Hãy tin vào chính mình.",
+        "latency_ms": 190.16069999997853
+      },
+      {
+        "index": 42,
+        "text": "We had a great conversation.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Chúng tôi đã có một cuộc trò chuyện tuyệt vời.",
+        "raw": "Chúng tôi đã có một cuộc trò chuyện tuyệt vời.",
+        "latency_ms": 257.7547000000777
+      },
+      {
+        "index": 43,
+        "text": "Take a chance and try it.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Hãy lấy cơ hội và thử nó.",
+        "raw": "Hãy lấy cơ hội và thử nó.",
+        "latency_ms": 224.86879999996745
+      },
+      {
+        "index": 44,
+        "text": "I had a feeling something was wrong.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "light_verbs",
+        "translation": "Tôi cảm thấy có một cái gì đó sai.",
+        "raw": "Tôi cảm thấy có một cái gì đó sai.",
+        "latency_ms": 305.10299999878043
+      },
+      {
+        "index": 45,
+        "text": "What now?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Bây giờ là gì?",
+        "raw": "Bây giờ là gì?",
+        "latency_ms": 189.97889999991457
+      },
+      {
+        "index": 46,
+        "text": "Why not?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Tại sao không?",
+        "raw": "Tại sao không?",
+        "latency_ms": 141.0448999995424
+      },
+      {
+        "index": 47,
+        "text": "Really?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Thực sự ?",
+        "raw": "Thực sự ?",
+        "latency_ms": 120.69449999944482
+      },
+      {
+        "index": 48,
+        "text": "Who's there?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Ai ở đó?",
+        "raw": "Ai ở đó?",
+        "latency_ms": 150.66320000005362
+      },
+      {
+        "index": 49,
+        "text": "Are you ready?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Bạn đã sẵn sàng?",
+        "raw": "Bạn đã sẵn sàng?",
+        "latency_ms": 186.27829999968526
+      },
+      {
+        "index": 50,
+        "text": "How come?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Làm thế nào đến?",
+        "raw": "Làm thế nào đến?",
+        "latency_ms": 155.16290000050503
+      },
+      {
+        "index": 51,
+        "text": "What happened?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Chuyện gì đã xảy ra?",
+        "raw": "Chuyện gì đã xảy ra?",
+        "latency_ms": 375.13829999988957
+      },
+      {
+        "index": 52,
+        "text": "Is that so?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Có phải như vậy?",
+        "raw": "Có phải như vậy?",
+        "latency_ms": 351.797200000874
+      },
+      {
+        "index": 53,
+        "text": "Where were we?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Chúng ta ở đâu?",
+        "raw": "Chúng ta ở đâu?",
+        "latency_ms": 268.30189999964205
+      },
+      {
+        "index": 54,
+        "text": "What's new?",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Cái gì mới?",
+        "raw": "Cái gì mới?",
+        "latency_ms": 138.24290000047768
+      },
+      {
+        "index": 55,
+        "text": "No way!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Không cách nào!",
+        "raw": "Không cách nào!",
+        "latency_ms": 136.6969999999128
+      },
+      {
+        "index": 56,
+        "text": "Of course!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Tất nhiên !",
+        "raw": "Tất nhiên !",
+        "latency_ms": 116.70709999998508
+      },
+      {
+        "index": 57,
+        "text": "Good job!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Công việc tốt!",
+        "raw": "Công việc tốt!",
+        "latency_ms": 120.08030000106373
+      },
+      {
+        "index": 58,
+        "text": "Come on!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Hãy tiếp!",
+        "raw": "Hãy tiếp!",
+        "latency_ms": 125.60339999981807
+      },
+      {
+        "index": 59,
+        "text": "Watch out!",
+        "src": "en",
+        "tgt": "vi",
+        "category": "short_questions",
+        "translation": "Xem ra ngoài!",
+        "raw": "Xem ra ngoài!",
+        "latency_ms": 136.8921000012051
+      },
+      {
+        "index": 60,
+        "text": "with communities across Southeast Asia.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "với các cộng đồng trên khắp Đông Nam Á.",
+        "raw": "với các cộng đồng trên khắp Đông Nam Á.",
+        "latency_ms": 245.48119999963092
+      },
+      {
+        "index": 61,
+        "text": "The mountain roads twisted across the rugged valley.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Các con Đường núi quanh co uốn lượn thung lũng sét.",
+        "raw": "Các con đường núi xoay quanh thung lũng sét.",
+        "latency_ms": 295.0810000002093
+      },
+      {
+        "index": 62,
+        "text": "Even though it was raining heavily, they decided to continue the journey.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Mặc dù mưa rất nhiều, họ quyết định tiếp tục hành trình.",
+        "raw": "Mặc dù mưa rất nhiều, họ quyết định tiếp tục hành trình.",
+        "latency_ms": 325.2883999994083
+      },
+      {
+        "index": 63,
+        "text": "If you have any questions, feel free to ask me anytime.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Nếu bạn có bất kỳ câu hỏi nào, hãy tự do hỏi tôi bất cứ lúc nào.",
+        "raw": "Nếu bạn có bất kỳ câu hỏi nào, hãy tự do hỏi tôi bất cứ lúc nào.",
+        "latency_ms": 454.4477999988885
+      },
+      {
+        "index": 64,
+        "text": "The technology developed rapidly over the past few decades.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Công nghệ phát triển nhanh chóng trong vài thập kỷ qua.",
+        "raw": "Công nghệ phát triển nhanh chóng trong vài thập kỷ qua.",
+        "latency_ms": 315.72140000025684
+      },
+      {
+        "index": 65,
+        "text": "She told him that she would arrive before midnight.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Cô ấy nói rằng cô ấy sẽ đến trước nửa đêm.",
+        "raw": "Cô ấy nói rằng cô ấy sẽ đến trước nửa đêm.",
+        "latency_ms": 313.75840000146127
+      },
+      {
+        "index": 66,
+        "text": "Although he was exhausted, he finished the report on time.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Mặc dù anh ta đã bị mệt mỏi, nhưng anh ta hoàn thành báo cáo kịp thời.",
+        "raw": "Mặc dù anh ta đã bị mệt mỏi, nhưng anh ta hoàn thành báo cáo kịp thời.",
+        "latency_ms": 438.1963000014366
+      },
+      {
+        "index": 67,
+        "text": "We need to find a sustainable solution for future generations.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Chúng ta cần tìm một giải pháp bền vững cho các thế hệ trong tương lai.",
+        "raw": "Chúng ta cần tìm một giải pháp bền vững cho các thế hệ trong tương lai.",
+        "latency_ms": 339.2015999997966
+      },
+      {
+        "index": 68,
+        "text": "The view from the top of the hill was breathtaking.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Khung cảnh từ đỉnh đồi rất hấp dẫn.",
+        "raw": "Khung cảnh từ đỉnh đồi rất hấp dẫn.",
+        "latency_ms": 280.3820999997697
+      },
+      {
+        "index": 69,
+        "text": "They worked together to overcome every obstacle they faced.",
+        "src": "en",
+        "tgt": "vi",
+        "category": "complex_sentences",
+        "translation": "Họ đã làm việc cùng nhau để vượt qua mọi trở ngại mà họ phải đối mặt.",
+        "raw": "Họ đã làm việc cùng nhau để vượt qua mọi trở ngại mà họ phải đối mặt.",
+        "latency_ms": 407.65860000101384
+      },
+      {
+        "index": 70,
+        "text": "我们只是随便聊聊。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng tôi chỉ nói chuyện.",
+        "raw": "Chúng tôi chỉ nói chuyện.",
+        "latency_ms": 154.22970000145142
+      },
+      {
+        "index": 71,
+        "text": "你到底想说什么？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Bạn muốn nói gì?",
+        "raw": "Bạn muốn nói gì?",
+        "latency_ms": 156.25809999983176
+      },
+      {
+        "index": 72,
+        "text": "事情没有你想的那么简单。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Mọi thứ không đơn giản như bạn nghĩ.",
+        "raw": "Mọi thứ không đơn giản như bạn nghĩ.",
+        "latency_ms": 206.15749999888067
+      },
+      {
+        "index": 73,
+        "text": "山路一路蜿蜒，",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đường núi quanh co uốn lượn",
+        "raw": "Đường núi xoay quanh",
+        "latency_ms": 129.85999999909836
+      },
+      {
+        "index": 74,
+        "text": "你要去哪里？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Bạn sẽ đi đâu?",
+        "raw": "Bạn sẽ đi đâu?",
+        "latency_ms": 125.82509999992908
+      },
+      {
+        "index": 75,
+        "text": "今天晚上你有空吗？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đêm nay anh có chỗ không?",
+        "raw": "Đêm nay anh có chỗ không?",
+        "latency_ms": 208.6046999993414
+      },
+      {
+        "index": 76,
+        "text": "不要放在心上，没关系的。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đừng nhắm vào tâm trí, không sao.",
+        "raw": "Đừng nhắm vào tâm trí, không sao.",
+        "latency_ms": 299.4017000000895
+      },
+      {
+        "index": 77,
+        "text": "我们抓住这次难得的发展机遇。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng tôi đã tận dụng cơ hội phát triển khó khăn này.",
+        "raw": "Chúng tôi đã tận dụng cơ hội phát triển khó khăn này.",
+        "latency_ms": 263.97329999963404
+      },
+      {
+        "index": 78,
+        "text": "真是太不可思议了！",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đáng ngạc nhiên lắm!",
+        "raw": "Đáng ngạc nhiên lắm!",
+        "latency_ms": 180.92719999913243
+      },
+      {
+        "index": 79,
+        "text": "快点，我们马上就要迟到了。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Nhanh chóng, chúng ta sẽ sớm muộn.",
+        "raw": "Nhanh chóng, chúng ta sẽ sớm muộn.",
+        "latency_ms": 252.5906999999279
+      },
+      {
+        "index": 80,
+        "text": "我想一个人静一静。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tôi muốn một mình yên tĩnh.",
+        "raw": "Tôi muốn một mình yên tĩnh.",
+        "latency_ms": 187.82559999999648
+      },
+      {
+        "index": 81,
+        "text": "这件事情交给我来处理吧。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Hãy cho tôi giải quyết vấn đề này.",
+        "raw": "Hãy cho tôi giải quyết vấn đề này.",
+        "latency_ms": 204.75189999888244
+      },
+      {
+        "index": 82,
+        "text": "你怎么现在才来？",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Sao anh mới đến bây giờ?",
+        "raw": "Sao anh mới đến bây giờ?",
+        "latency_ms": 157.06580000005488
+      },
+      {
+        "index": 83,
+        "text": "不管发生什么事，我都会支持你。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Bất kể chuyện gì xảy ra, tôi sẽ ủng hộ bạn.",
+        "raw": "Bất kể chuyện gì xảy ra, tôi sẽ ủng hộ bạn.",
+        "latency_ms": 300.8478000010655
+      },
+      {
+        "index": 84,
+        "text": "時間不早了，我們該回去了。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Thời gian không quá sớm, chúng tôi phải trở lại.",
+        "raw": "Thời gian không quá sớm, chúng tôi phải trở lại.",
+        "latency_ms": 306.82550000165065
+      },
+      {
+        "index": 85,
+        "text": "這件事我真的不知道。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tôi thực sự không biết điều này.",
+        "raw": "Tôi thực sự không biết điều này.",
+        "latency_ms": 199.34339999963413
+      },
+      {
+        "index": 86,
+        "text": "山路盤旋而上，景色十分壯觀。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Đỉnh núi, cảnh rất đẹp.",
+        "raw": "Đỉnh núi, cảnh rất đẹp.",
+        "latency_ms": 198.06459999927029
+      },
+      {
+        "index": 87,
+        "text": "你今天的心情看起來很不錯。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Tâm trạng của bạn ngày hôm nay trông rất tệ.",
+        "raw": "Tâm trạng của bạn ngày hôm nay trông rất tệ.",
+        "latency_ms": 283.21990000040387
+      },
+      {
+        "index": 88,
+        "text": "我們一起努力，一定可以成功的。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Chúng ta cùng làm việc và chắc chắn sẽ thành công.",
+        "raw": "Chúng ta cùng làm việc và chắc chắn sẽ thành công.",
+        "latency_ms": 275.767300001462
+      },
+      {
+        "index": 89,
+        "text": "請稍等片刻，馬上就好。",
+        "src": "zh",
+        "tgt": "vi",
+        "category": "zh_dialogue",
+        "translation": "Hãy đợi một chút, ngay lập tức.",
+        "raw": "Hãy đợi một chút, ngay lập tức.",
+        "latency_ms": 205.07160000124713
+      },
+      {
+        "index": 90,
+        "text": "Bọn mình chỉ đang uống chút nước thôi.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "We just drink a little water.",
+        "raw": "We just drink a little water.",
+        "latency_ms": 201.2732999992295
+      },
+      {
+        "index": 91,
+        "text": "Hôm nay bạn thấy thế nào?",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "How do you feel today?",
+        "raw": "How do you feel today?",
+        "latency_ms": 149.73019999888493
+      },
+      {
+        "index": 92,
+        "text": "Đừng bận tâm về chuyện đó nhé.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Do not worry about that.",
+        "raw": "Do not worry about that.",
+        "latency_ms": 195.56370000100287
+      },
+      {
+        "index": 93,
+        "text": "Tôi sẽ lo liệu việc này.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "I will take care of this.",
+        "raw": "I will take care of this.",
+        "latency_ms": 194.07540000065637
+      },
+      {
+        "index": 94,
+        "text": "Ý tôi không phải như vậy đâu.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "I do not mean that.",
+        "raw": "I do not mean that.",
+        "latency_ms": 171.51379999995697
+      },
+      {
+        "index": 95,
+        "text": "Chờ một lát, tôi quay lại ngay.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Wait a moment, I’m back right away.",
+        "raw": "Wait a moment, I’m back right away.",
+        "latency_ms": 270.00349999980244
+      },
+      {
+        "index": 96,
+        "text": "Thời tiết hôm nay thật dễ chịu.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "The weather today is nice.",
+        "raw": "The weather today is nice.",
+        "latency_ms": 166.75430000032065
+      },
+      {
+        "index": 97,
+        "text": "Chúng ta cùng nhau vượt qua khó khăn này.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Together we overcome this difficulty.",
+        "raw": "Together we overcome this difficulty.",
+        "latency_ms": 211.7209999996703
+      },
+      {
+        "index": 98,
+        "text": "Cậu đang đùa mình đấy à?",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "Are you joking with me?",
+        "raw": "Are you joking with me?",
+        "latency_ms": 178.31830000068294
+      },
+      {
+        "index": 99,
+        "text": "Những con đường núi quanh co uốn lượn.",
+        "src": "vi",
+        "tgt": "en",
+        "category": "vi_to_en",
+        "translation": "The mountainous roads around are swallowing.",
+        "raw": "The mountainous roads around are swallowing.",
+        "latency_ms": 318.0932000013854
+      },
+      {
+        "index": 100,
+        "text": "Xin chào, rất vui được gặp bạn.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "你好,很高兴见到你。",
+        "raw": "你好,很高兴见到你。",
+        "latency_ms": 235.96309999993537
+      },
+      {
+        "index": 101,
+        "text": "Hôm nay bạn có rảnh không?",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "你今天有时间吗?",
+        "raw": "你今天有时间吗?",
+        "latency_ms": 192.20339999992575
+      },
+      {
+        "index": 102,
+        "text": "Chúc bạn một ngày tốt lành!",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "祝你好的一天!",
+        "raw": "祝你好的一天!",
+        "latency_ms": 176.96489999980258
+      },
+      {
+        "index": 103,
+        "text": "Cảm ơn bạn rất nhiều vì đã giúp đỡ.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "非常感谢你帮忙。",
+        "raw": "非常感谢你帮忙。",
+        "latency_ms": 169.4950000000972
+      },
+      {
+        "index": 104,
+        "text": "Mọi chuyện rồi sẽ ổn thôi.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "事情就好了。",
+        "raw": "事情就好了。",
+        "latency_ms": 135.0349999993341
+      },
+      {
+        "index": 105,
+        "text": "Tôi không nghĩ mọi chuyện lại đơn giản như thế.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "我不认为事情如此简单。",
+        "raw": "我不认为事情如此简单。",
+        "latency_ms": 194.14330000108748
+      },
+      {
+        "index": 106,
+        "text": "Chúng ta đi ăn tối cùng nhau nhé.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "让我们一起吃晚饭吧。",
+        "raw": "让我们一起吃晚饭吧。",
+        "latency_ms": 223.93360000023677
+      },
+      {
+        "index": 107,
+        "text": "Bạn muốn uống trà hay cà phê?",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "你想喝茶或咖啡吗?",
+        "raw": "你想喝茶或咖啡吗?",
+        "latency_ms": 186.47169999894686
+      },
+      {
+        "index": 108,
+        "text": "Tôi hiểu ý của bạn rồi.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "我明白你的意思。",
+        "raw": "我明白你的意思。",
+        "latency_ms": 169.23599999972794
+      },
+      {
+        "index": 109,
+        "text": "Hẹn gặp lại bạn vào ngày mai nhé.",
+        "src": "vi",
+        "tgt": "zh",
+        "category": "vi_to_zh",
+        "translation": "明天再见你了。",
+        "raw": "明天再见你了。",
+        "latency_ms": 191.76899999911257
+      },
+      {
+        "index": 110,
+        "text": "Good morning, have a nice day!",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "早上好,好好过一天!",
+        "raw": "早上好,好好过一天!",
+        "latency_ms": 216.57779999986815
+      },
+      {
+        "index": 111,
+        "text": "What are you doing tonight?",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "今天晚上你在做什么?",
+        "raw": "今天晚上你在做什么?",
+        "latency_ms": 224.2846000008285
+      },
+      {
+        "index": 112,
+        "text": "I completely agree with your opinion.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "我完全同意你的观点。",
+        "raw": "我完全同意你的观点。",
+        "latency_ms": 196.8747999999323
+      },
+      {
+        "index": 113,
+        "text": "Please take a seat and wait a moment.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "请坐下来等一会儿。",
+        "raw": "请坐下来等一会儿。",
+        "latency_ms": 427.76360000061686
+      },
+      {
+        "index": 114,
+        "text": "Are you sure about this?",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "你对此确信吗?",
+        "raw": "你对此确信吗?",
+        "latency_ms": 207.10030000009283
+      },
+      {
+        "index": 115,
+        "text": "Let's work together to finish the project.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "让我们一起努力完成项目。",
+        "raw": "让我们一起努力完成项目。",
+        "latency_ms": 273.0025000000751
+      },
+      {
+        "index": 116,
+        "text": "Thank you for your valuable support.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "感谢您珍贵的支持。",
+        "raw": "感谢您珍贵的支持。",
+        "latency_ms": 283.5445000000618
+      },
+      {
+        "index": 117,
+        "text": "The sunset over the ocean was beautiful.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "太阳落在海上是美丽的。",
+        "raw": "太阳落在海上是美丽的。",
+        "latency_ms": 412.45249999883526
+      },
+      {
+        "index": 118,
+        "text": "Don't worry, everything will be fine.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "不要担心,一切都好。",
+        "raw": "不要担心,一切都好。",
+        "latency_ms": 218.3856999999989
+      },
+      {
+        "index": 119,
+        "text": "See you at the conference tomorrow.",
+        "src": "en",
+        "tgt": "zh",
+        "category": "en_to_zh",
+        "translation": "明天在会议上见到你。",
+        "raw": "明天在会议上见到你。",
+        "latency_ms": 512.7726000009716
+      },
+      {
+        "index": 120,
+        "text": "今天天气真好，我们出去散步吧。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "The weather is good today, let’s go on a walk.",
+        "raw": "The weather is good today, let’s go on a walk.",
+        "latency_ms": 433.4349000000657
+      },
+      {
+        "index": 121,
+        "text": "你明白我的意思吗？",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Do you understand what I mean?",
+        "raw": "Do you understand what I mean?",
+        "latency_ms": 237.1927999993204
+      },
+      {
+        "index": 122,
+        "text": "这是一次非常难忘的经历。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "This is a very unforgettable experience.",
+        "raw": "This is a very unforgettable experience.",
+        "latency_ms": 244.6885999997903
+      },
+      {
+        "index": 123,
+        "text": "请问洗手间在哪里？",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Where is the toilet?",
+        "raw": "Where is the toilet?",
+        "latency_ms": 157.77109999908134
+      },
+      {
+        "index": 124,
+        "text": "很高兴能在这里见到大家。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I am glad to see everyone here.",
+        "raw": "I am glad to see everyone here.",
+        "latency_ms": 204.76229999985662
+      },
+      {
+        "index": 125,
+        "text": "这件事我们以后再慢慢商量。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "We will slowly discuss this later.",
+        "raw": "We will slowly discuss this later.",
+        "latency_ms": 200.05150000179128
+      },
+      {
+        "index": 126,
+        "text": "大家辛苦了，今天就到这里吧。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "Everyone is hard, come here today.",
+        "raw": "Everyone is hard, come here today.",
+        "latency_ms": 261.1278000003949
+      },
+      {
+        "index": 127,
+        "text": "我赞同你的看法。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I agree with your opinion.",
+        "raw": "I agree with your opinion.",
+        "latency_ms": 195.12770000073942
+      },
+      {
+        "index": 128,
+        "text": "无论如何，请务必注意安全。",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "In any case, be careful for safety.",
+        "raw": "In any case, be careful for safety.",
+        "latency_ms": 273.91659999921103
+      },
+      {
+        "index": 129,
+        "text": "祝你旅途愉快，一路顺风！",
+        "src": "zh",
+        "tgt": "en",
+        "category": "zh_to_en",
+        "translation": "I wish you a happy journey, the wind!",
+        "raw": "I wish you a happy journey, the wind!",
+        "latency_ms": 382.5356000015745
+      }
+    ]
+  }
+}

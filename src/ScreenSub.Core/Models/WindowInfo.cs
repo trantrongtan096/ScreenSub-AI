@@ -14,3 +14,4 @@ public sealed class WindowInfo
 
     public override string ToString() => DisplayText;
 }
+

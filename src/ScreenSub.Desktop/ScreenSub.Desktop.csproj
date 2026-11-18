@@ -8,7 +8,16 @@
     <UseWPF>true</UseWPF>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>1.0.0-beta.2</Version>
+    <InformationalVersion>1.0.0-beta.2</InformationalVersion>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="Assets\app.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
@@ -22,9 +31,15 @@
     <ProjectReference Include="..\ScreenSub.Core\ScreenSub.Core.csproj" />
     <ProjectReference Include="..\ScreenSub.Capture\ScreenSub.Capture.csproj" />
     <ProjectReference Include="..\ScreenSub.Ocr\ScreenSub.Ocr.csproj" />
+    <ProjectReference Include="..\ScreenSub.Audio\ScreenSub.Audio.csproj" />
+    <ProjectReference Include="..\ScreenSub.Speech\ScreenSub.Speech.csproj" />
     <ProjectReference Include="..\ScreenSub.Translation\ScreenSub.Translation.csproj" />
     <ProjectReference Include="..\ScreenSub.Overlay\ScreenSub.Overlay.csproj" />
     <ProjectReference Include="..\ScreenSub.Infrastructure\ScreenSub.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\workers\**" Link="workers\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

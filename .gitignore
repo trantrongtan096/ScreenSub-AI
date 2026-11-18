@@ -6,3 +6,12 @@
 .idea/
 *.log
 screensub.db
+publish/
+dist/
+__pycache__/
+*.pyc
+models/
+*.bin
+*.onnx
+
+

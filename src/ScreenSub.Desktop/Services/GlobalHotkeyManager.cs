@@ -34,7 +34,14 @@ public sealed partial class GlobalHotkeyManager : IDisposable
 
     public int Register(ModifierKeys modifiers, Key key, Action callback)
     {
-        _currentId++;
+        return TryRegister(modifiers, key, callback, out int id) ? id : -1;
+    }
+
+    public bool TryRegister(ModifierKeys modifiers, Key key, Action callback, out int hotkeyId)
+    {
+        hotkeyId = -1;
+        if (key == Key.None) return false;
+
         uint fsModifiers = 0;
         if ((modifiers & ModifierKeys.Control) != 0) fsModifiers |= MOD_CONTROL;
         if ((modifiers & ModifierKeys.Shift) != 0) fsModifiers |= MOD_SHIFT;
@@ -42,14 +49,36 @@ public sealed partial class GlobalHotkeyManager : IDisposable
         if ((modifiers & ModifierKeys.Windows) != 0) fsModifiers |= MOD_WIN;
 
         uint vk = (uint)KeyInterop.VirtualKeyFromKey(key);
+        if (vk == 0) return false;
 
-        if (RegisterHotKey(_hwnd, _currentId, fsModifiers, vk))
+        int newId = ++_currentId;
+        if (RegisterHotKey(_hwnd, newId, fsModifiers, vk))
         {
-            _callbacks[_currentId] = callback;
-            return _currentId;
+            _callbacks[newId] = callback;
+            hotkeyId = newId;
+            return true;
         }
 
-        return -1;
+        return false;
+    }
+
+    public bool Unregister(int id)
+    {
+        if (id <= 0) return false;
+        if (_callbacks.Remove(id))
+        {
+            return UnregisterHotKey(_hwnd, id);
+        }
+        return false;
+    }
+
+    public void UnregisterAll()
+    {
+        foreach (var id in _callbacks.Keys.ToList())
+        {
+            UnregisterHotKey(_hwnd, id);
+        }
+        _callbacks.Clear();
     }
 
     private nint HwndHook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
@@ -76,3 +105,4 @@ public sealed partial class GlobalHotkeyManager : IDisposable
         _callbacks.Clear();
     }
 }
+

@@ -1,4 +1,5 @@
 using ScreenSub.Core.Models;
+using ScreenSub.Core.Processing;
 
 namespace ScreenSub.Ocr;
 
@@ -34,6 +35,7 @@ public sealed class TextNormalizer
         foreach (var line in sortedLines)
         {
             var cleanText = CleanLineText(line.Text);
+            cleanText = SubtitleTextProcessor.RestoreWordSpacing(cleanText);
             if (string.IsNullOrWhiteSpace(cleanText)) continue;
 
             line.Text = cleanText;
@@ -67,7 +69,8 @@ public sealed class TextNormalizer
             }
         }
 
-        return string.Join("\n", mergedParagraphs);
+        string merged = string.Join("\n", mergedParagraphs);
+        return SubtitleTextProcessor.RestoreWordSpacing(merged);
     }
 
     /// <summary>
@@ -110,9 +113,15 @@ public sealed class TextNormalizer
         var cleaned = new string(text.Where(c => !char.IsControl(c)).ToArray()).Trim();
 
         // Discard isolated tiny noise punctuation
-        if (cleaned.Length == 1 && (cleaned == "_" || cleaned == "-" || cleaned == "~" || cleaned == "`"))
+        if (cleaned.Length == 1 && (cleaned == "_" || cleaned == "-" || cleaned == "~" || cleaned == "`" || cleaned == ":" || cleaned == "." || cleaned == ","))
         {
             return string.Empty;
+        }
+
+        // Strip leading boundary punctuation artifact (e.g. ": are you" -> "are you")
+        if (cleaned.Length >= 3 && (cleaned[0] == ':' || cleaned[0] == ';' || cleaned[0] == '~' || cleaned[0] == '`') && cleaned[1] == ' ')
+        {
+            cleaned = cleaned.Substring(2).TrimStart();
         }
 
         return cleaned;

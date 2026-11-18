@@ -25,6 +25,7 @@
     <ProjectReference Include="..\..\src\ScreenSub.Capture\ScreenSub.Capture.csproj" />
     <ProjectReference Include="..\..\src\ScreenSub.Ocr\ScreenSub.Ocr.csproj" />
     <ProjectReference Include="..\..\src\ScreenSub.Translation\ScreenSub.Translation.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Audio\ScreenSub.Audio.csproj" />
     <ProjectReference Include="..\..\src\ScreenSub.Infrastructure\ScreenSub.Infrastructure.csproj" />
   </ItemGroup>
 

@@ -1,10 +1,12 @@
 using System.Diagnostics;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using ScreenSub.Core.Enums;
 using ScreenSub.Core.Interfaces;
 using ScreenSub.Core.Models;
+using ScreenSub.Core.Processing;
 
 namespace ScreenSub.Translation;
 
@@ -14,9 +16,54 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
     private readonly ISettingsService _settingsService;
     private readonly TranslationCache _cache;
 
+    public TranslationCache Cache => _cache;
     public string ProviderName => "Azure AI Translator";
     public bool IsMock => false;
-    public ServiceStatus Status { get; private set; } = ServiceStatus.Stopped;
+
+    private ServiceStatus? _runtimeStatus;
+    private string? _runtimeStatusMessage;
+
+    public bool IsConfigured => !string.IsNullOrWhiteSpace(ResolveApiKey());
+
+    private string ResolveApiKey()
+    {
+        var apiKey = _settingsService.GetSecret("AzureApiKey");
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            apiKey = _settingsService.Settings.AzureApiKey;
+        }
+        return apiKey?.Trim() ?? string.Empty;
+    }
+
+    private string ResolveRegion() => _settingsService.Settings.AzureRegion?.Trim() ?? string.Empty;
+
+    private string ResolveEndpoint()
+    {
+        var ep = _settingsService.Settings.AzureEndpoint?.Trim();
+        return string.IsNullOrWhiteSpace(ep)
+            ? "https://api.cognitive.microsofttranslator.com"
+            : ep.TrimEnd('/');
+    }
+
+    public ServiceStatus Status
+    {
+        get
+        {
+            if (_runtimeStatus.HasValue) return _runtimeStatus.Value;
+            return IsConfigured ? ServiceStatus.Running : ServiceStatus.Degraded;
+        }
+        private set => _runtimeStatus = value;
+    }
+
+    public string StatusMessage
+    {
+        get
+        {
+            if (!string.IsNullOrEmpty(_runtimeStatusMessage)) return _runtimeStatusMessage;
+            return IsConfigured ? "Đã cấu hình Azure API" : "Chưa cấu hình API Key";
+        }
+        private set => _runtimeStatusMessage = value;
+    }
 
     public AzureTranslatorProvider(HttpClient httpClient, ISettingsService settingsService, TranslationCache cache)
     {
@@ -37,28 +84,54 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
             return TranslationResult.Empty;
         }
 
+        text = SubtitleTextProcessor.RestoreWordSpacing(text.Trim());
+        string cacheIdentity = "AzureTranslator|api=3.0|post=v2-general";
+
         // Check Cache first
-        if (_cache.TryGet(text, source, targets, out var cachedResult) && cachedResult != null)
+        if (_cache.TryGet(text, source, targets, out var cachedResult, contextSignature: null, cacheIdentity: cacheIdentity) && cachedResult != null)
         {
             return cachedResult;
         }
 
-        var settings = _settingsService.Settings;
-        var apiKey = _settingsService.GetSecret("AzureApiKey");
-        if (string.IsNullOrWhiteSpace(apiKey))
+        // Filter out same-language translation if source language is explicitly known (Rule: Don't request Azure to translate to the same language)
+        var effectiveTargets = targets
+            .Where(t => !IsSameLanguage(source, t))
+            .Distinct()
+            .ToList();
+
+        if (effectiveTargets.Count == 0 && source != SourceLanguage.Auto)
         {
-            apiKey = settings.AzureApiKey;
+            var directTranslations = new Dictionary<TargetLanguage, string>();
+            foreach (var t in targets)
+            {
+                directTranslations[t] = text;
+            }
+
+            var immediateResult = new TranslationResult
+            {
+                OriginalText = text,
+                DetectedLanguage = MapSourceLanguageCode(source) ?? string.Empty,
+                Translations = directTranslations,
+                LatencyMs = 0,
+                Timestamp = DateTime.UtcNow,
+                IsFromCache = false,
+                ProviderName = ProviderName
+            };
+
+            _cache.Set(text, source, targets, immediateResult, contextSignature: null, cacheIdentity: cacheIdentity);
+            return immediateResult;
         }
 
+        var apiKey = ResolveApiKey();
         if (string.IsNullOrWhiteSpace(apiKey))
         {
             Status = ServiceStatus.Degraded;
-            throw new InvalidOperationException("Chưa cấu hình Azure Translator API Key trong Cài đặt.");
+            StatusMessage = "Chưa cấu hình API Key";
+            throw new InvalidOperationException("Chưa cấu hình Azure Translator API Key trong tab Cài đặt.");
         }
 
-        var endpoint = string.IsNullOrWhiteSpace(settings.AzureEndpoint)
-            ? "https://api.cognitive.microsofttranslator.com"
-            : settings.AzureEndpoint.TrimEnd('/');
+        var endpoint = ResolveEndpoint();
+        var region = ResolveRegion();
 
         // Build URL parameters
         var queryParams = new List<string> { "api-version=3.0" };
@@ -69,7 +142,7 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
             queryParams.Add($"from={fromCode}");
         }
 
-        foreach (var t in targets)
+        foreach (var t in effectiveTargets)
         {
             var toCode = MapTargetLanguageCode(t);
             if (!string.IsNullOrEmpty(toCode))
@@ -86,9 +159,9 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
         using var request = new HttpRequestMessage(HttpMethod.Post, url);
         request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
         request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
-        if (!string.IsNullOrWhiteSpace(settings.AzureRegion))
+        if (!string.IsNullOrWhiteSpace(region))
         {
-            request.Headers.Add("Ocp-Apim-Subscription-Region", settings.AzureRegion);
+            request.Headers.Add("Ocp-Apim-Subscription-Region", region);
         }
 
         try
@@ -100,7 +173,25 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
             {
                 var errContent = await response.Content.ReadAsStringAsync(ct);
                 Status = ServiceStatus.Error;
-                throw new HttpRequestException($"Azure API trả về mã lỗi: {response.StatusCode} - {errContent}");
+
+                if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
+                {
+                    StatusMessage = "Lỗi 401/403: Sai API Key hoặc Azure Region không khớp";
+                }
+                else if (response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    StatusMessage = "Lỗi 404: Sai Azure Endpoint URL";
+                }
+                else if ((int)response.StatusCode == 429)
+                {
+                    StatusMessage = "Lỗi giới hạn (429): Vượt quá quota request";
+                }
+                else
+                {
+                    StatusMessage = $"Lỗi Azure API: {(int)response.StatusCode}";
+                }
+
+                throw new HttpRequestException($"Azure API trả về lỗi: {response.StatusCode} - {errContent}");
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync(ct);
@@ -127,10 +218,24 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
 
                         if (targetEnum.HasValue)
                         {
-                            translationsDict[targetEnum.Value] = transText;
+                            translationsDict[targetEnum.Value] = SubtitleTextProcessor.RestoreWordSpacing(SubtitleTextProcessor.CleanTranslationOutput(transText));
                         }
                     }
                 }
+            }
+
+            // Populate source language text into the dictionary if target requested it
+            if (source == SourceLanguage.English || detectedLang.Equals("en", StringComparison.OrdinalIgnoreCase))
+            {
+                if (targets.Contains(TargetLanguage.English)) translationsDict[TargetLanguage.English] = text;
+            }
+            if (source == SourceLanguage.Chinese || detectedLang.StartsWith("zh", StringComparison.OrdinalIgnoreCase))
+            {
+                if (targets.Contains(TargetLanguage.Chinese)) translationsDict[TargetLanguage.Chinese] = text;
+            }
+            if (source == SourceLanguage.Vietnamese || detectedLang.Equals("vi", StringComparison.OrdinalIgnoreCase))
+            {
+                if (targets.Contains(TargetLanguage.Vietnamese)) translationsDict[TargetLanguage.Vietnamese] = text;
             }
 
             var result = new TranslationResult
@@ -144,17 +249,28 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
                 ProviderName = ProviderName
             };
 
-            _cache.Set(text, source, targets, result);
+            _cache.Set(text, source, targets, result, contextSignature: null, cacheIdentity: cacheIdentity);
             Status = ServiceStatus.Connected;
+            StatusMessage = "Đã kết nối";
             return result;
         }
         catch (OperationCanceledException)
         {
             throw;
         }
-        catch (Exception)
+        catch (HttpRequestException)
         {
             Status = ServiceStatus.Error;
+            if (string.IsNullOrEmpty(StatusMessage) || StatusMessage == "Đã kết nối")
+            {
+                StatusMessage = "Lỗi mạng: Không kết nối được Azure API";
+            }
+            throw;
+        }
+        catch (Exception ex)
+        {
+            Status = ServiceStatus.Error;
+            StatusMessage = $"Lỗi: {ex.Message}";
             throw;
         }
     }
@@ -182,4 +298,71 @@ public sealed class AzureTranslatorProvider : ITranslationProvider
         "vi" => TargetLanguage.Vietnamese,
         _ => null
     };
+
+    private static bool IsSameLanguage(SourceLanguage source, TargetLanguage target) => (source, target) switch
+    {
+        (SourceLanguage.English, TargetLanguage.English) => true,
+        (SourceLanguage.Chinese, TargetLanguage.Chinese) => true,
+        (SourceLanguage.Vietnamese, TargetLanguage.Vietnamese) => true,
+        _ => false
+    };
+
+    /// <summary>
+    /// Verifies live Azure Translator connectivity and credentials without hitting the cache.
+    /// </summary>
+    public async Task<(bool Success, string Message)> TestConnectionAsync(CancellationToken ct = default)
+    {
+        var apiKey = ResolveApiKey();
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            return (false, "Chưa nhập Azure Translator API Key.");
+        }
+
+        var endpoint = ResolveEndpoint();
+        var region = ResolveRegion();
+        var url = $"{endpoint}/translate?api-version=3.0&from=en&to=vi";
+        var requestBody = JsonSerializer.Serialize(new[] { new { Text = "Hello" } });
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, url);
+        request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+        request.Headers.Add("Ocp-Apim-Subscription-Key", apiKey);
+        if (!string.IsNullOrWhiteSpace(region))
+        {
+            request.Headers.Add("Ocp-Apim-Subscription-Region", region);
+        }
+
+        try
+        {
+            using var response = await _httpClient.SendAsync(request, ct);
+            if (response.IsSuccessStatusCode)
+            {
+                Status = ServiceStatus.Connected;
+                StatusMessage = "Đã kết nối Azure";
+                return (true, $"Kết nối Azure thành công (Region: {(string.IsNullOrEmpty(region) ? "Global" : region)}).");
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized || response.StatusCode == HttpStatusCode.Forbidden)
+            {
+                Status = ServiceStatus.Error;
+                StatusMessage = "Lỗi 401/403: Sai API Key hoặc Region";
+                return (false, "Lỗi xác thực (401/403): API Key hoặc Azure Region (ví dụ eastasia / southeastasia / global) không khớp với tài nguyên Azure.");
+            }
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return (false, $"Lỗi 404: Sai Azure Endpoint ({endpoint}).");
+            }
+
+            if ((int)response.StatusCode == 429)
+            {
+                return (false, "Lỗi 429: Tài khoản Azure đang vượt quá giới hạn quota.");
+            }
+
+            return (false, $"Azure API trả về mã {(int)response.StatusCode} ({response.ReasonPhrase}).");
+        }
+        catch (Exception ex)
+        {
+            return (false, $"Không kết nối được Azure: {ex.Message}");
+        }
+    }
 }

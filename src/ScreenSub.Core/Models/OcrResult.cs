@@ -29,3 +29,4 @@ public sealed class OcrResult
 
     public bool HasText => !string.IsNullOrWhiteSpace(FullText);
 }
+

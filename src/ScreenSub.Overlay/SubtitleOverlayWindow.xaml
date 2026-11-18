@@ -6,94 +6,98 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
+        ShowActivated="False"
         ShowInTaskbar="False"
         SizeToContent="Height"
         MinWidth="400"
         MaxWidth="1600"
         Loaded="OnLoaded"
-        MouseDown="OnMouseDown">
+        MouseDown="OnMouseDown"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        RenderOptions.ClearTypeHint="Enabled">
 
     <Window.Resources>
+        <FontFamily x:Key="OverlayFont">Segoe UI Variable Display, Segoe UI, Microsoft YaHei UI, PingFang SC, Arial, sans-serif</FontFamily>
+
         <LinearGradientBrush x:Key="OverlayBorderBrush" StartPoint="0,0" EndPoint="1,1">
-            <GradientStop Color="#8B5CF6" Offset="0.0" />
-            <GradientStop Color="#4F46E5" Offset="0.5" />
-            <GradientStop Color="#3B82F6" Offset="1.0" />
+            <GradientStop Color="#408B5CF6" Offset="0.0" />
+            <GradientStop Color="#406366F1" Offset="0.5" />
+            <GradientStop Color="#4038BDF8" Offset="1.0" />
         </LinearGradientBrush>
     </Window.Resources>
 
     <Grid Margin="12">
         <Border x:Name="OverlayContainer"
                 BorderBrush="{StaticResource OverlayBorderBrush}"
-                BorderThickness="1.5"
-                CornerRadius="22"
-                Padding="32,16"
+                BorderThickness="1"
+                CornerRadius="18"
+                Padding="28,14"
                 HorizontalAlignment="Center">
-            
-            <Border.Effect>
-                <DropShadowEffect BlurRadius="25" ShadowDepth="4" Opacity="0.5" Color="#000000" />
-            </Border.Effect>
 
             <StackPanel HorizontalAlignment="Center">
                 <!-- Edit Mode Drag Banner -->
                 <Border x:Name="EditModeBanner"
                         Background="#7C3AED"
                         CornerRadius="8"
-                        Padding="10,4"
+                        Padding="12,5"
                         Margin="0,0,0,10"
                         HorizontalAlignment="Center"
                         Visibility="Collapsed">
                     <TextBlock Text="✥ KÉO THẢ ĐỂ DI CHUYỂN PHỤ ĐỀ • NHẤN 'KHÓA VỊ TRÍ' KHI XONG"
                                Foreground="#FFFFFF"
-                               FontSize="11"
-                               FontWeight="Bold"
+                               FontSize="11.5"
+                               FontWeight="SemiBold"
+                               FontFamily="{StaticResource OverlayFont}"
                                HorizontalAlignment="Center" />
                 </Border>
 
-                <!-- Line 1: Chinese / Original -->
+                <!-- Line 1: Source Language Text -->
                 <TextBlock x:Name="OriginalTextBlock"
-                           Text="你今天有时间吗？"
-                           Foreground="#FFFFFF"
-                           FontSize="28"
-                           FontWeight="Medium"
-                           FontFamily="Segoe UI, Microsoft YaHei, Arial"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap"
-                           Margin="0,2">
-                    <TextBlock.Effect>
-                        <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.9" Color="#000000" />
-                    </TextBlock.Effect>
-                </TextBlock>
-
-                <!-- Line 2: English -->
-                <TextBlock x:Name="EnglishTextBlock"
-                           Text="Are you free today?"
-                           Foreground="#FBBF24"
-                           FontSize="23"
+                           Text=""
+                           Foreground="#CBD5E1"
+                           FontSize="18"
                            FontWeight="SemiBold"
-                           FontFamily="Segoe UI, Arial"
+                           FontFamily="{StaticResource OverlayFont}"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Margin="0,2">
+                           Margin="0,2,0,4">
                     <TextBlock.Effect>
-                        <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.9" Color="#000000" />
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="1.5" Opacity="0.95" Color="#000000" />
                     </TextBlock.Effect>
                 </TextBlock>
 
-                <!-- Line 3: Vietnamese -->
-                <TextBlock x:Name="VietnameseTextBlock"
-                           Text="Hôm nay bạn có rảnh không?"
-                           Foreground="#F1F5F9"
-                           FontSize="23"
-                           FontWeight="Normal"
-                           FontFamily="Segoe UI, Arial"
+                <!-- Line 2: Secondary Target (English/Chinese) -->
+                <TextBlock x:Name="EnglishTextBlock"
+                           Text=""
+                           Foreground="#FDE047"
+                           FontSize="22"
+                           FontWeight="SemiBold"
+                           FontFamily="{StaticResource OverlayFont}"
                            TextAlignment="Center"
                            TextWrapping="Wrap"
-                           Margin="0,2">
+                           Margin="0,2,0,4">
                     <TextBlock.Effect>
-                        <DropShadowEffect BlurRadius="6" ShadowDepth="2" Opacity="0.9" Color="#000000" />
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="1.5" Opacity="0.95" Color="#000000" />
+                    </TextBlock.Effect>
+                </TextBlock>
+
+                <!-- Line 3: Primary Target Translation (Vietnamese) -->
+                <TextBlock x:Name="VietnameseTextBlock"
+                           Text=""
+                           Foreground="#FFFFFF"
+                           FontSize="26"
+                           FontWeight="Bold"
+                           FontFamily="{StaticResource OverlayFont}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap"
+                           Margin="0,2,0,2">
+                    <TextBlock.Effect>
+                        <DropShadowEffect BlurRadius="4" ShadowDepth="1.5" Opacity="0.95" Color="#000000" />
                     </TextBlock.Effect>
                 </TextBlock>
             </StackPanel>
         </Border>
     </Grid>
 </Window>
+

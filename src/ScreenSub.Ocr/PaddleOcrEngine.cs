@@ -21,7 +21,11 @@ public sealed class PaddleOcrEngine : IOcrEngine
 
     public string EngineName => "PaddleOCR (Local)";
     public ServiceStatus Status { get; private set; } = ServiceStatus.Stopped;
+    public string StatusMessage { get; private set; } = "Chưa khởi động";
     public bool IsPaddleAvailable { get; private set; }
+    public double LastDecodeMs { get; private set; }
+    public double LastDetMs { get; private set; }
+    public double LastRecMs { get; private set; }
 
     public PaddleOcrEngine(string pythonExePath = "python", string workerScriptPath = "workers/paddle-ocr/ocr_worker.py")
     {
@@ -35,38 +39,47 @@ public sealed class PaddleOcrEngine : IOcrEngine
         await _semaphore.WaitAsync(ct);
         try
         {
-            if (_workerProcess != null && !_workerProcess.HasExited)
+            if (Status == ServiceStatus.Running && _workerProcess != null && !_workerProcess.HasExited)
             {
                 return;
             }
 
-            Status = ServiceStatus.Starting;
+            if (_workerProcess != null)
+            {
+                try
+                {
+                    if (!_workerProcess.HasExited) _workerProcess.Kill(entireProcessTree: true);
+                    _workerProcess.Dispose();
+                }
+                catch { }
+                _workerProcess = null;
+            }
 
-            string fullScriptPath = Path.IsPathRooted(_workerScriptPath)
-                ? _workerScriptPath
-                : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, _workerScriptPath));
+            Status = ServiceStatus.Starting;
+            StatusMessage = "Đang khởi động OCR worker...";
+
+            string fullScriptPath = ResolveScriptPath();
 
             if (!File.Exists(fullScriptPath))
             {
-                // Also check relative to workspace
-                var altPath = Path.GetFullPath(_workerScriptPath);
-                if (File.Exists(altPath))
-                {
-                    fullScriptPath = altPath;
-                }
+                Status = ServiceStatus.Error;
+                StatusMessage = $"Không tìm thấy worker script: {fullScriptPath}";
+                return;
             }
+
+            string pythonExe = ResolvePythonPath(_pythonExePath);
 
             var startInfo = new ProcessStartInfo
             {
-                FileName = _pythonExePath,
+                FileName = pythonExe,
                 Arguments = $"\"{fullScriptPath}\"",
                 UseShellExecute = false,
                 RedirectStandardInput = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
                 CreateNoWindow = true,
-                StandardOutputEncoding = System.Text.Encoding.UTF8,
-                StandardInputEncoding = System.Text.Encoding.UTF8
+                StandardOutputEncoding = new System.Text.UTF8Encoding(false),
+                StandardInputEncoding = new System.Text.UTF8Encoding(false)
             };
 
             _workerProcess = new Process { StartInfo = startInfo };
@@ -76,38 +89,90 @@ public sealed class PaddleOcrEngine : IOcrEngine
                 if (!_isDisposed)
                 {
                     Status = ServiceStatus.Error;
+                    StatusMessage = "Tiến trình OCR worker đã thoát bất ngờ.";
                 }
             };
 
-            _workerProcess.Start();
+            try
+            {
+                _workerProcess.Start();
+                AppDomain.CurrentDomain.ProcessExit += (_, _) =>
+                {
+                    try
+                    {
+                        if (_workerProcess != null && !_workerProcess.HasExited)
+                        {
+                            _workerProcess.Kill();
+                        }
+                    }
+                    catch { }
+                };
+            }
+            catch (Exception ex)
+            {
+                Status = ServiceStatus.Error;
+                StatusMessage = $"Không thể khởi chạy Python: {ex.Message}";
+                return;
+            }
+
             _stdin = _workerProcess.StandardInput;
             _stdout = _workerProcess.StandardOutput;
 
-            // Ping worker
+            // Ping worker with a generous startup timeout (ONNX Runtime import can take several seconds under load)
+            using var pingCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            pingCts.CancelAfter(TimeSpan.FromSeconds(15));
+
             int id = Interlocked.Increment(ref _requestIdCounter);
             var pingReq = JsonSerializer.Serialize(new { id, cmd = "ping" });
-            await _stdin.WriteLineAsync(pingReq.AsMemory(), ct);
-            await _stdin.FlushAsync(ct);
+            await _stdin.WriteLineAsync(pingReq.AsMemory(), pingCts.Token);
+            await _stdin.FlushAsync(pingCts.Token);
 
-            var responseLine = await _stdout.ReadLineAsync(ct);
+            var responseLine = await _stdout.ReadLineAsync(pingCts.Token);
             if (!string.IsNullOrWhiteSpace(responseLine))
             {
                 using var doc = JsonDocument.Parse(responseLine);
+                string backend = "unknown";
+                if (doc.RootElement.TryGetProperty("backend", out var bProp))
+                {
+                    backend = bProp.GetString() ?? "unknown";
+                }
+
                 if (doc.RootElement.TryGetProperty("paddle", out var paddleProp))
                 {
                     IsPaddleAvailable = paddleProp.GetBoolean();
                 }
-                Status = ServiceStatus.Running;
+
+                if (IsPaddleAvailable)
+                {
+                    Status = ServiceStatus.Running;
+                    StatusMessage = backend switch
+                    {
+                        "rapidocr" => "Sẵn sàng (RapidOCR ONNX)",
+                        "paddleocr" => "Sẵn sàng (PaddleOCR)",
+                        _ => "Sẵn sàng"
+                    };
+                }
+                else
+                {
+                    Status = ServiceStatus.Degraded;
+                    StatusMessage = "Chưa cài OCR: Cần chạy pip install rapidocr_onnxruntime";
+                }
             }
             else
             {
-                Status = ServiceStatus.Degraded;
+                Status = ServiceStatus.Error;
+                StatusMessage = "Worker không phản hồi lệnh ping";
             }
         }
-        catch
+        catch (OperationCanceledException)
         {
             Status = ServiceStatus.Error;
-            throw;
+            StatusMessage = "Khởi động worker bị timeout";
+        }
+        catch (Exception ex)
+        {
+            Status = ServiceStatus.Error;
+            StatusMessage = $"Lỗi khởi động OCR: {ex.Message}";
         }
         finally
         {
@@ -132,12 +197,15 @@ public sealed class PaddleOcrEngine : IOcrEngine
             {
                 return OcrResult.Empty;
             }
+
+            if (Status != ServiceStatus.Running)
+            {
+                return OcrResult.Empty;
+            }
         }
 
-        // Use lock so requests are sent sequentially without interleaved lines
-        if (!await _semaphore.WaitAsync(2000, ct))
+        if (!await _semaphore.WaitAsync(10000, ct))
         {
-            // Drop frame if OCR is overloaded
             return OcrResult.Empty;
         }
 
@@ -164,15 +232,58 @@ public sealed class PaddleOcrEngine : IOcrEngine
             await _stdin.WriteLineAsync(jsonLine.AsMemory(), ct);
             await _stdin.FlushAsync(ct);
 
-            var respLine = await _stdout.ReadLineAsync(ct);
+            // Wait for the response matching reqId before honoring caller cancellation,
+            // so mid-flight Stop/Pause/RegionSwitch never leaves unread JSON responses desynchronizing stdout.
+            using var ioTimeoutCts = new CancellationTokenSource(15000);
+            string? respLine = null;
+            JsonDocument? matchedDoc = null;
+            while (true)
+            {
+                respLine = await _stdout.ReadLineAsync(ioTimeoutCts.Token);
+                if (respLine == null)
+                {
+                    ResetProcessUnlocked();
+                    return OcrResult.Empty;
+                }
+                if (string.IsNullOrWhiteSpace(respLine))
+                {
+                    continue;
+                }
+
+                JsonDocument candidateDoc;
+                try
+                {
+                    candidateDoc = JsonDocument.Parse(respLine);
+                }
+                catch
+                {
+                    ResetProcessUnlocked();
+                    return OcrResult.Empty;
+                }
+
+                if (candidateDoc.RootElement.TryGetProperty("id", out var idProp) && idProp.ValueKind == JsonValueKind.Number)
+                {
+                    int respId = idProp.GetInt32();
+                    if (respId != reqId && respId > 0 && respId < reqId)
+                    {
+                        candidateDoc.Dispose();
+                        continue;
+                    }
+                }
+
+                matchedDoc = candidateDoc;
+                break;
+            }
+
             sw.Stop();
 
-            if (string.IsNullOrWhiteSpace(respLine))
+            if (ct.IsCancellationRequested)
             {
+                matchedDoc?.Dispose();
                 return OcrResult.Empty;
             }
 
-            using var doc = JsonDocument.Parse(respLine);
+            using var doc = matchedDoc!;
             var root = doc.RootElement;
 
             if (root.TryGetProperty("status", out var statusProp) && statusProp.GetString() == "ok")
@@ -196,13 +307,17 @@ public sealed class PaddleOcrEngine : IOcrEngine
 
                 string mergedText = _normalizer.NormalizeAndMergeLines(ocrLines);
                 var (stableText, _) = _normalizer.ApplyStabilityFilter(mergedText);
+                string finalText = !string.IsNullOrWhiteSpace(stableText) ? stableText : mergedText;
 
                 double avgConf = ocrLines.Count > 0 ? ocrLines.Average(l => l.Confidence) : 0;
+                LastDecodeMs = root.TryGetProperty("decode_ms", out var decP) ? decP.GetDouble() : 0;
+                LastDetMs = root.TryGetProperty("det_ms", out var detP) ? detP.GetDouble() : 0;
+                LastRecMs = root.TryGetProperty("rec_ms", out var recP) ? recP.GetDouble() : 0;
                 long latency = root.TryGetProperty("latency_ms", out var latProp) ? latProp.GetInt64() : sw.ElapsedMilliseconds;
 
                 return new OcrResult
                 {
-                    FullText = stableText,
+                    FullText = finalText,
                     Lines = ocrLines,
                     Confidence = avgConf,
                     LatencyMs = latency,
@@ -212,14 +327,126 @@ public sealed class PaddleOcrEngine : IOcrEngine
 
             return OcrResult.Empty;
         }
+        catch (OperationCanceledException) when (ct.IsCancellationRequested)
+        {
+            return OcrResult.Empty;
+        }
         catch
         {
+            ResetProcessUnlocked();
             return OcrResult.Empty;
         }
         finally
         {
             _semaphore.Release();
         }
+    }
+
+    private void ResetProcessUnlocked()
+    {
+        try { _stdin?.Dispose(); } catch { }
+        try { _stdout?.Dispose(); } catch { }
+        if (_workerProcess != null)
+        {
+            try
+            {
+                if (!_workerProcess.HasExited) _workerProcess.Kill(entireProcessTree: true);
+            }
+            catch { }
+            try { _workerProcess.Dispose(); } catch { }
+        }
+        _stdin = null;
+        _stdout = null;
+        _workerProcess = null;
+        if (!_isDisposed)
+        {
+            Status = ServiceStatus.Stopped;
+        }
+    }
+
+    private string ResolveScriptPath()
+    {
+        if (Path.IsPathRooted(_workerScriptPath) && File.Exists(_workerScriptPath))
+        {
+            return _workerScriptPath;
+        }
+
+        string inBase = Path.Combine(AppContext.BaseDirectory, _workerScriptPath);
+        if (File.Exists(inBase))
+        {
+            return inBase;
+        }
+
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        for (int i = 0; i < 6 && dir != null; i++)
+        {
+            string candidate = Path.Combine(dir.FullName, _workerScriptPath);
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+            string altCandidate = Path.Combine(dir.FullName, "workers", "paddle-ocr", "ocr_worker.py");
+            if (File.Exists(altCandidate))
+            {
+                return altCandidate;
+            }
+            dir = dir.Parent;
+        }
+
+        string inCwd = Path.Combine(Directory.GetCurrentDirectory(), _workerScriptPath);
+        if (File.Exists(inCwd))
+        {
+            return inCwd;
+        }
+
+        return inBase;
+    }
+
+    private static string ResolvePythonPath(string configuredPath)
+    {
+        if (Path.IsPathRooted(configuredPath) && File.Exists(configuredPath))
+        {
+            return configuredPath;
+        }
+
+        // Check app-bundled portable Python runtime first, then well-known system install paths
+        string baseDir = AppContext.BaseDirectory;
+        string[] wellKnown =
+        [
+            Path.Combine(baseDir, "python", "python.exe"),
+            Path.Combine(baseDir, "runtime", "python", "python.exe"),
+            Path.Combine(baseDir, ".venv", "Scripts", "python.exe"),
+            @"C:\PyThon\python.exe",
+            @"C:\Program Files\Python312\python.exe",
+            @"C:\Program Files\Python311\python.exe",
+            @"C:\Program Files\Python310\python.exe",
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Python\Python312\python.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Python\Python311\python.exe"),
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Python\Python310\python.exe")
+        ];
+
+        foreach (var p in wellKnown)
+        {
+            if (File.Exists(p)) return p;
+        }
+
+        // Check PATH environment variable, excluding WindowsApps
+        var pathVar = Environment.GetEnvironmentVariable("PATH");
+        if (!string.IsNullOrEmpty(pathVar))
+        {
+            var paths = pathVar.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
+            foreach (var dir in paths)
+            {
+                if (dir.Contains("WindowsApps", StringComparison.OrdinalIgnoreCase)) continue;
+                var candidate = Path.Combine(dir, "python.exe");
+                if (File.Exists(candidate))
+                {
+                    return candidate;
+                }
+            }
+        }
+
+        return configuredPath;
     }
 
     public async ValueTask DisposeAsync()

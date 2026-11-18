@@ -1,46 +1,93 @@
 # ScreenSub AI — Windows Realtime Subtitle Translator
 
+[![Version](https://img.shields.io/badge/Release-v1.0.0--beta.1-blue.svg)](https://github.com)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)](https://microsoft.com/windows)
+[![.NET](https://img.shields.io/badge/.NET-10.0%20WPF-purple.svg)](https://dotnet.microsoft.com/)
+[![Tests](https://img.shields.io/badge/Tests-55%2F55%20Passing-success.svg)](docs/TEST_REPORT.md)
+[![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
+
 ![ScreenSub AI](docs/dashboard-preview.jpg)
 
-**ScreenSub AI** là ứng dụng Windows Desktop (WPF .NET 10) dịch phụ đề màn hình thời gian thực (Realtime Screen Subtitle Translator) hỗ trợ **Tiếng Anh (English)**, **Tiếng Trung (中文)** và **Tiếng Việt**. 
+**ScreenSub AI** là ứng dụng Windows Desktop (WPF .NET 10 x64) dịch phụ đề thời gian thực (Realtime Subtitle Translator) hỗ trợ **Tiếng Anh (English)**, **Tiếng Trung (中文)** và **Tiếng Việt**. 
 
-Ứng dụng cho phép bạn chọn một vùng phụ đề trên bất kỳ trình phát video nào (YouTube, Netflix, VLC, Chrome, game, v.v.), tự động nhận diện chữ bằng OCR cục bộ và dịch sang ngôn ngữ mong muốn với cửa sổ phụ đề nổi (Overlay) trong suốt, xuyên chuột (Click-through) và không làm gián đoạn trải nghiệm xem.
+Ứng dụng hỗ trợ cả **2 nguồn đầu vào độc lập**:
+1. **OCR Subtitles**: Nhận diện phụ đề trên màn hình (YouTube, Netflix, VLC, games, livestream) qua RapidOCR / PaddleOCR.
+2. **Audio Subtitles**: Thu âm thanh hệ thống trực tiếp qua **WASAPI Loopback** (không cần mic ngoài hay virtual audio cable) và nhận diện giọng nói bằng **Whisper AI** cục bộ.
+
+Tất cả được dịch thuật bằng mô hình **Local Neural AI (M2M-100 418M INT8 qua CTranslate2)** hoạt động **100% Offline**, 0 rò rỉ dữ liệu lên Cloud, hoặc tùy chọn qua **Azure AI Translator**, hiển thị trực tiếp lên cửa sổ phụ đề nổi (Transparent Click-through Overlay).
+
+---
+
+## 🚀 Tính năng nổi bật: Quick Translate & Chạy nền (Background Mode)
+
+- **⚡ Dịch tức thì (Quick Translate Mode)**: Đang xem phim/YouTube trên Chrome hoặc bất kỳ cửa sổ nào, chỉ cần nhấn **`Ctrl + Alt + Q`**, kéo chọn vùng phụ đề. Ứng dụng **tự động lưu vùng, tự động định vị Overlay trên video và tự động kích hoạt nhận diện/dịch ngay lập tức** mà **không cần quay lại Dashboard bấm Start**!
+- **🛎 Khay hệ thống (System Tray)**: Thu nhỏ Dashboard xuống khay hệ thống khi đóng cửa sổ. Pipeline nhận diện, Overlay và phím tắt toàn cục vẫn tiếp tục chạy mượt mà dưới nền. Menu chuột phải đầy đủ: Mở Dashboard, Chọn vùng mới, Bắt đầu/Tạm dừng, Dừng, Cài đặt và Thoát ứng dụng.
+
+---
+
+## 📦 Tải & Cài đặt nhanh (Windows Beta x64)
+
+Người dùng có thể cài đặt trực tiếp qua bộ cài Windows Setup chính thức:
+
+- **Bộ cài Setup**: [`dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe`](dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe)
+- **Kích thước file**: **8.80 MB** (9,226,106 bytes)
+- **Mã băm SHA-256**: `18F683E28A68775C32AE6C321B5DF4FBF1B8447FE769BCA15C6805F46A462C65`
+- **Thư mục cài đặt**: `%ProgramFiles%\ScreenSub AI\`
+- **Thư mục AI Models**: `%LocalAppData%\ScreenSubAI\Models\` *(được bảo toàn nguyên vẹn khi gỡ cài đặt)*
+- **Thư mục Logs**: `%LocalAppData%\ScreenSubAI\Logs\` *(tự động xoay vòng mỗi ngày, tối đa 10MB/file, lưu 7 ngày)*
+
+Xem hướng dẫn chi tiết từng bước: [docs/INSTALL.md](docs/INSTALL.md)
+
+---
+
+## 📚 Tài liệu chi tiết dự án
+
+- 📖 **[Hướng dẫn sử dụng người dùng (User Guide)](docs/USER_GUIDE.md)**: Chi tiết cách dùng OCR Mode, Audio Mode, tùy biến Overlay và phím tắt.
+- 🛠️ **[Hướng dẫn cài đặt & Cấu hình môi trường (Install Guide)](docs/INSTALL.md)**: Yêu cầu hệ thống, bước cài đặt và thiết lập Python worker.
+- 🧠 **[Cẩm nang mô hình AI Cục bộ (Model Guide)](docs/MODEL_GUIDE.md)**: Thông số kỹ thuật, cấu hình M2M-100 418M INT8, Whisper và RapidOCR.
+- 🧪 **[Báo cáo kiểm thử & Đánh giá chất lượng (Test Report)](docs/TEST_REPORT.md)**: Chi tiết 50 automated tests, bài kiểm tra tải 100 chu kỳ OCR, 50 chu kỳ Translation và 8 danh mục ngữ nghĩa.
+- ⚠️ **[Lỗi tồn tại & Giải pháp tạm thời (Known Issues)](docs/KNOWN_ISSUES.md)**: Các trường hợp ngoại lệ, giới hạn ngữ cảnh của mô hình và cách xử lý.
+- 📝 **[Nhật ký phát hành (Changelog)](docs/CHANGELOG.md)**: Lịch sử phát triển và thay đổi từ Phase 1 đến Phase 10 Beta.
+- 🏗️ **[Tài liệu kiến trúc hệ thống (Architecture)](docs/ARCHITECTURE.md)**: Sơ đồ kiến trúc tầng, Clean Architecture MVVM và xử lý đa luồng.
 
 ---
 
 ## Tính năng chính
 
-- **Giao diện Dashboard Windows Hiện đại**: Thiết kế Dark Mode chuyên nghiệp, hiển thị trực quan thông số OCR, API dịch và độ trễ thực tế.
+- **Giao diện Dashboard Windows Hiện đại**: Thiết kế Fluent Dark Mode chuyên nghiệp (`#0B1020`), hiển thị trực quan thông số OCR, Whisper ASR, công cụ dịch và độ trễ thực tế (ms).
 - **Chọn vùng màn hình (Snipping Tool Style)**:
-  - Nhấn nút **Chọn vùng nhận diện** hoặc phím tắt **`Ctrl + Shift + S`** bất cứ lúc nào.
-  - Lớp phủ mờ toàn màn hình, con trỏ crosshair, kéo thả chọn hình chữ nhật với viền neon cyan và hiển thị kích thước `W × H px` thời gian thực.
+  - Phím tắt toàn cục **`Ctrl + Alt + Q`** (mặc định, tùy chỉnh được trong Cài đặt).
+  - Lớp phủ mờ toàn màn hình, con trỏ crosshair, kéo thả hình chữ nhật viền neon cyan với kích thước `W × H px` tức thời.
   - Nhấn `ESC` để hủy.
 - **2 Chế độ theo dõi vùng dịch**:
-  - **Vùng cố định (Fixed Region)**: Cố định tại tọa độ màn hình, phù hợp xem phim, YouTube.
-  - **Theo cửa sổ (Follow Window)**: Tự động đi theo cửa sổ ứng dụng khi di chuyển hoặc thay đổi kích thước. Tự động tạm dừng nếu cửa sổ bị thu nhỏ (minimize).
+  - **Vùng cố định (Fixed Region)**: Cố định tại tọa độ màn hình.
+  - **Theo cửa sổ (Follow Window)**: Tự động bám theo cửa sổ ứng dụng khi di chuyển/đổi kích thước; tự dừng nếu thu nhỏ.
 - **Hỗ trợ đa màn hình & DPI Scaling**:
-  - Hỗ trợ đầy đủ màn hình phụ có tọa độ âm.
   - DPI Awareness `PerMonitorV2` (100%, 125%, 150%) chuẩn xác theo từng pixel vật lý.
-- **Realtime OCR Pipeline (PaddleOCR)**:
-  - Xử lý cục bộ qua worker process (`workers/paddle-ocr/ocr_worker.py`).
-  - Hỗ trợ chữ Trung (giản thể / phồn thể), Anh, Việt và ký tự Unicode.
-  - **Phát hiện thay đổi khung hình (Frame Change Detection)**: Bỏ qua OCR khi hình ảnh không thay đổi để tiết kiệm tài nguyên CPU.
-  - **Bộ lọc ổn định phụ đề (Stability Filter)**: Ghép dòng theo thứ tự đọc tự nhiên và chống giật/nhấp nháy chữ do sai lệch nhỏ giữa các khung hình liên tiếp.
-- **AI Translation Engine (Azure AI Translator)**:
-  - Tích hợp Azure AI Translator REST API v3.0 thực tế.
-  - Hỗ trợ dịch giữa 3 ngôn ngữ: Anh ↔ Trung ↔ Việt.
-  - Cơ chế tự động nhận diện ngôn ngữ (Auto Language Detection).
-  - Bộ nhớ đệm (Translation Cache) chống gọi API trùng lặp.
-  - Tích hợp sẵn **Mock Translation Provider** để thử nghiệm ngay lập tức khi chưa cấu hình API Key.
+  - Hoạt động mượt mà trên màn hình phụ có tọa độ âm.
+- **Realtime OCR Pipeline (RapidOCR / PaddleOCR)**:
+  - Tối ưu hóa độ trễ: **~61.9 ms P50**, đạt thông lượng ~15 FPS.
+  - Phát hiện thay đổi khung hình (Frame Change Detection) để tiết kiệm CPU khi video tĩnh.
+  - Bộ lọc ổn định phụ đề ghép dòng và chống giật/nhấp nháy.
+- **Audio Realtime Translation & Speech-to-Subtitle**:
+  - Thu âm thanh hệ thống qua **WASAPI Loopback Capture**.
+  - Phân đoạn giọng nói thời gian thực bằng **Voice Activity Detection (VAD)**.
+  - Hàng đợi bảo vệ chống trễ (Queue Backlog Protection): Tối đa 5 phân đoạn, cơ chế Latest-Wins.
+  - Nhận diện giọng nói cục bộ với **Whisper.net**.
+- **Local AI Translation (100% Offline)**:
+  - Mô hình Seq2Seq **M2M-100 418M INT8** chạy trên CTranslate2 engine.
+  - Hỗ trợ dịch hai chiều giữa 3 ngôn ngữ: Anh ↔ Trung ↔ Việt (6 cặp ngôn ngữ).
+  - Độ trễ dịch thuật cục bộ cực nhanh: **~291 ms P50**.
+  - Chống lặp từ vô hạn với `repetition_penalty=1.2` và `no_repeat_ngram_size=3`.
 - **Cửa sổ phụ đề nổi (Subtitle Overlay Window)**:
-  - Cửa sổ riêng biệt, trong suốt, borderless, luôn hiển thị trên cùng (Always on Top).
-  - **Click-through (Xuyên chuột)**: Sử dụng `WS_EX_TRANSPARENT | WS_EX_LAYERED`, bấm chuột xuyên qua phụ đề xuống video bên dưới.
-  - **Chống nhận diện ngược (Capture Exclusion)**: Sử dụng `SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE)` để Windows loại trừ cửa sổ phụ đề khỏi capture, ngăn chặn hoàn toàn vòng lặp OCR vô hạn.
-  - 3 Chế độ hiển thị: **Một ngôn ngữ (Single)**, **Song ngữ (Dual)**, **Tam ngữ (Triple)**.
-  - Tùy chỉnh cỡ chữ, màu sắc, độ đậm của nền và chế độ kéo thả tự do.
-- **Bảo mật & Cài đặt**:
-  - Khóa API được mã hóa an toàn trên máy cục bộ bằng **Windows DPAPI** (`ProtectedData`).
-  - Lưu trữ cấu hình bằng SQLite và JSON nội bộ.
+  - Trong suốt, borderless, luôn hiển thị trên cùng (Always on Top).
+  - **Click-through (Xuyên chuột)**: Bấm chuột xuyên qua phụ đề xuống video bên dưới.
+  - **Chống nhận diện ngược (Capture Exclusion)**: Sử dụng `WDA_EXCLUDEFROMCAPTURE` ngăn ngừa triệt để vòng lặp OCR vô hạn.
+  - 3 Chế độ hiển thị: **Đơn ngữ (Single)**, **Song ngữ (Dual)**, **Tam ngữ (Triple)**.
+- **Độ tin cậy & An toàn vận hành**:
+  - Khóa API được mã hóa an toàn bằng **Windows DPAPI** (`ProtectedData`).
+  - Dọn dẹp tiến trình con tự động: Không bao giờ để lại tiến trình Python worker mồ côi (`ProcessExit` hook).
+  - Hệ thống ghi log Serilog chuyên nghiệp với giới hạn dung lượng và xoay vòng theo ngày.
 
 ---
 
@@ -49,20 +96,29 @@
 ```text
 ScreenSubAI/
 ├── src/
-│   ├── ScreenSub.Core/           # Domain models, enums, interfaces
+│   ├── ScreenSub.Core/           # Domain models, enums, interfaces, Hardware & Model metadata
 │   ├── ScreenSub.Capture/        # Screen capture, BitBlt, DPI scaling, window tracking
-│   ├── ScreenSub.Ocr/            # PaddleOCR process worker, text normalizer, stability filter
-│   ├── ScreenSub.Translation/    # Azure AI Translator, Mock provider, Translation cache
+│   ├── ScreenSub.Audio/          # WASAPI loopback capture, PCM buffer, VAD integration
+│   ├── ScreenSub.Speech/         # Whisper.net speech recognition engine
+│   ├── ScreenSub.Ocr/            # RapidOCR/PaddleOCR worker client, stability filter
+│   ├── ScreenSub.Translation/    # Local M2M-100 CTranslate2, Azure Translator, Resolver, Cache
 │   ├── ScreenSub.Overlay/        # Transparent overlay window, click-through, capture exclusion
-│   ├── ScreenSub.Infrastructure/ # SQLite database, Windows DPAPI secret protection, Serilog
-│   └── ScreenSub.Desktop/        # WPF MVVM Presentation layer, Dashboard UI, Hotkeys
+│   ├── ScreenSub.Infrastructure/ # Hardware detection, LocalModelManager, SQLite, DPAPI, Serilog
+│   └── ScreenSub.Desktop/        # WPF MVVM Presentation layer, Dashboard UI, Global Hotkeys
 ├── workers/
-│   └── paddle-ocr/               # Python worker script (ocr_worker.py) & requirements.txt
+│   ├── paddle-ocr/               # Python worker script (ocr_worker.py) & requirements.txt
+│   └── translation/              # Local Neural M2M-100 worker (translation_worker.py)
+├── installer/                    # Inno Setup 6 script (ScreenSubAI_Setup.iss) & build script
+├── dist/                         # Setup executable distribution binaries
+├── publish/                      # Self-contained Release binaries for packaging
+├── test_assets/                  # Sample audio WAV & test images for automated testing
 ├── tests/
-│   ├── UnitTests/                # Unit tests (xUnit, FluentAssertions)
-│   └── IntegrationTests/         # Integration tests (DPAPI, SQLite, Providers)
-├── docs/
-│   └── ARCHITECTURE.md           # Tài liệu kiến trúc chi tiết
+│   ├── UnitTests/                # 28 Unit tests (xUnit, FluentAssertions)
+│   ├── IntegrationTests/         # 22 Integration tests (End-to-end, Audio, Offline, DPAPI)
+│   ├── benchmark_30_sentences_6_directions.py # 30-sentence benchmark suite
+│   ├── quality_evaluation_suite.py            # 8-category translation quality audit
+│   └── stability_soak_test.py                 # 100-cycle OCR & 50-cycle Translation soak test
+├── docs/                         # Toàn bộ tài liệu kỹ thuật & tài liệu người dùng
 ├── ScreenSubAI.slnx              # Solution file (.NET 10)
 └── README.md
 ```
@@ -72,76 +128,62 @@ ScreenSubAI/
 ## Yêu cầu môi trường
 
 - **Hệ điều hành**: Windows 10 (version 1903 trở lên) hoặc Windows 11 x64.
-- **.NET SDK**: .NET 10.0 SDK.
-- **Python**: Python 3.10+ x64 (nếu sử dụng PaddleOCR cục bộ).
+- **.NET Runtime**: .NET 10.0 Desktop Runtime x64 (được tự động kiểm tra khi cài đặt).
+- **Python**: Python 3.10+ x64 (để chạy worker OCR và mô hình dịch cục bộ).
 
 ---
 
-## Hướng dẫn cài đặt & chạy
+## Hướng dẫn Build từ Source Code
 
 ### 1. Build Solution
 
 ```powershell
-# Restore và build toàn bộ solution
-dotnet build ScreenSubAI.slnx
+# Restore và build toàn bộ solution chế độ Release
+dotnet build ScreenSubAI.slnx -c Release
 ```
 
-### 2. Chạy kiểm thử (Tests)
+### 2. Chạy kiểm thử tự động (50/50 Tests Passed)
 
 ```powershell
 dotnet test ScreenSubAI.slnx
 ```
 
-Tất cả 15 unit tests và integration tests đều hoàn thành thành công:
+Kết quả:
 ```text
-Passed! - UnitTests.dll (12 tests)
-Passed! - IntegrationTests.dll (3 tests)
-Total: 15 passed, 0 failed.
+Passed! - UnitTests.dll (28 tests)
+Passed! - IntegrationTests.dll (22 tests)
+Total: 50 passed, 0 failed (100% Passing).
 ```
 
-### 3. Cài đặt thư viện cho PaddleOCR Worker (Tùy chọn)
+### 3. Đóng gói bộ cài đặt (Build Installer)
 
-Để chạy nhận diện hình ảnh bằng PaddleOCR thật:
-
+Yêu cầu đã cài đặt **Inno Setup 6**:
 ```powershell
-pip install -r workers/paddle-ocr/requirements.txt
+powershell -ExecutionPolicy Bypass -File installer/build_installer.ps1
 ```
+File cài đặt sẽ được tạo tự động tại thư mục `dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe`.
 
-*(Lưu ý: Nếu chưa cài PaddleOCR, worker sẽ tự động phản hồi chế độ thử nghiệm để ứng dụng tiếp tục hoạt động mà không bị crash).*
-
-### 4. Khởi chạy ứng dụng
+### 4. Khởi chạy ứng dụng trực tiếp
 
 ```powershell
 dotnet run --project src/ScreenSub.Desktop/ScreenSub.Desktop.csproj
 ```
 
-Hoặc chạy trực tiếp file Release đã build:
-```powershell
-src\ScreenSub.Desktop\bin\Release\net10.0-windows\win-x64\publish\ScreenSub.Desktop.exe
-```
-
 ---
 
-## Phím tắt & Thao tác nhanh
+## Phím tắt mặc định & Thao tác nhanh
 
 | Thao tác | Phím tắt / Hành động | Mô tả |
 |---|---|---|
-| **Chọn vùng màn hình** | `Ctrl + Shift + S` | Kích hoạt công cụ chọn vùng kiểu Snipping Tool |
+| **Chọn vùng màn hình** | `Ctrl + Alt + Q` *(tùy chỉnh được)* | Kích hoạt công cụ chọn vùng kiểu Snipping Tool |
 | **Hủy chọn vùng** | `ESC` | Thoát chế độ chọn vùng màn hình |
-| **Bắt đầu dịch** | Nút `▶ Bắt đầu dịch` | Khởi động luồng capture, OCR và dịch thuật |
-| **Tạm dừng / Dừng** | Nút `⏸` / `⏹` | Tạm dừng hoặc dừng dịch thuật |
-| **Chỉnh vị trí Overlay** | Nút `✏ Chỉnh sửa vị trí Overlay` | Tắt click-through, cho phép kéo thả cửa sổ phụ đề |
-
----
-
-## Cấu hình Azure Translator (Tùy chọn)
-
-1. Nhấp vào tab **Cài đặt** ở thanh bên trái của Dashboard.
-2. Nhập **Azure Translator API Key** và **Azure Region** (ví dụ: `eastasia`, `southeastasia`).
-3. Tắt tùy chọn *Sử dụng Mock Translation*.
-4. Nhấn **Lưu cài đặt**. Khóa API của bạn sẽ được tự động mã hóa bằng DPAPI.
+| **Bắt đầu dịch** | Nút `▶ Bắt đầu dịch` | Khởi động pipeline capture, OCR/Audio và dịch thuật |
+| **Tạm dừng / Dừng** | Nút `⏸` / `⏹` | Tạm dừng hoặc dừng toàn bộ pipeline |
+| **Chỉnh vị trí Overlay** | Nút `✏ Chỉnh sửa vị trí Overlay` | Tắt click-through, cho phép kéo thả/đổi kích thước cửa sổ phụ đề |
 
 ---
 
 ## Giấy phép
-Phát triển cho ScreenSub AI — Ứng dụng dịch phụ đề màn hình thời gian thực.
+Dự án được phân phối dưới giấy phép [MIT](LICENSE). Mọi mô hình AI đi kèm (M2M-100, Whisper, RapidOCR) đều tuân thủ giấy phép nguồn mở tương ứng.
+
+

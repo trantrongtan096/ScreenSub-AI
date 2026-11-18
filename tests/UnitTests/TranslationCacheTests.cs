@@ -71,3 +71,4 @@ public class ScreenRegionTests
         region.IsEmpty.Should().BeTrue();
     }
 }
+

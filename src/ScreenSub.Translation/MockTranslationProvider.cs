@@ -9,6 +9,7 @@ public sealed class MockTranslationProvider : ITranslationProvider
     public string ProviderName => "Mock Translation (Chế độ Thử nghiệm)";
     public bool IsMock => true;
     public ServiceStatus Status => ServiceStatus.Connected;
+    public string StatusMessage => "Chế độ Mock (Demo)";
 
     private static readonly Dictionary<string, (string En, string Vi, string Zh)> Dictionary = new(StringComparer.OrdinalIgnoreCase)
     {
@@ -101,3 +102,4 @@ public sealed class MockTranslationProvider : ITranslationProvider
         return "en";
     }
 }
+

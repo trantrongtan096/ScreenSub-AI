@@ -24,6 +24,15 @@
     <ProjectReference Include="..\..\src\ScreenSub.Core\ScreenSub.Core.csproj" />
     <ProjectReference Include="..\..\src\ScreenSub.Infrastructure\ScreenSub.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\ScreenSub.Translation\ScreenSub.Translation.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Capture\ScreenSub.Capture.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Ocr\ScreenSub.Ocr.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Audio\ScreenSub.Audio.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Speech\ScreenSub.Speech.csproj" />
+    <ProjectReference Include="..\..\src\ScreenSub.Desktop\ScreenSub.Desktop.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\..\test_assets\**" CopyToOutputDirectory="PreserveNewest" Link="test_assets\%(RecursiveDir)%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

@@ -1,14 +1,52 @@
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using ScreenSub.Capture;
 using ScreenSub.Core.Models;
 
 namespace ScreenSub.Desktop.Views;
 
 public partial class RegionSelectionWindow : Window
 {
-    private Point _startPoint;
+    private const uint WDA_EXCLUDEFROMCAPTURE = 0x00000011;
+    private const int WM_KEYDOWN = 0x0100;
+    private const int WM_RBUTTONDOWN = 0x0204;
+    private const int VK_ESCAPE = 0x1B;
+
+    private const int SM_XVIRTUALSCREEN = 76;
+    private const int SM_YVIRTUALSCREEN = 77;
+    private const int SM_CXVIRTUALSCREEN = 78;
+    private const int SM_CYVIRTUALSCREEN = 79;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct Win32Point
+    {
+        public int X;
+        public int Y;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetWindowDisplayAffinity(nint hWnd, uint dwAffinity);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetCursorPos(out Win32Point lpPoint);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SetForegroundWindow(nint hWnd);
+
+    [DllImport("user32.dll")]
+    private static extern int GetSystemMetrics(int nIndex);
+
+    private Point _startDipPoint;
+    private Win32Point _startPhysPoint;
     private bool _isSelecting;
+    private HwndSource? _hwndSource;
 
     public ScreenRegion SelectedRegion { get; private set; } = ScreenRegion.Empty;
     public bool IsCancelled { get; private set; } = true;
@@ -16,15 +54,64 @@ public partial class RegionSelectionWindow : Window
     public RegionSelectionWindow()
     {
         InitializeComponent();
+        SourceInitialized += OnSourceInitialized;
+    }
+
+    private void OnSourceInitialized(object? sender, EventArgs e)
+    {
+        var hwnd = new WindowInteropHelper(this).Handle;
+        if (hwnd != nint.Zero)
+        {
+            _hwndSource = HwndSource.FromHwnd(hwnd);
+            _hwndSource?.AddHook(WndProc);
+        }
+    }
+
+    private nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled)
+    {
+        if (msg == WM_KEYDOWN && wParam == (nint)VK_ESCAPE)
+        {
+            CancelAndClose();
+            handled = true;
+        }
+        else if (msg == WM_RBUTTONDOWN)
+        {
+            CancelAndClose();
+            handled = true;
+        }
+        return nint.Zero;
     }
 
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
-        // Cover all connected monitors including secondary screens with negative coordinates
-        Left = SystemParameters.VirtualScreenLeft;
-        Top = SystemParameters.VirtualScreenTop;
-        Width = SystemParameters.VirtualScreenWidth;
-        Height = SystemParameters.VirtualScreenHeight;
+        var hwnd = new WindowInteropHelper(this).Handle;
+
+        // Exclude region selection overlay from screen capture to prevent feedback loops
+        try
+        {
+            if (hwnd != nint.Zero)
+            {
+                SetWindowDisplayAffinity(hwnd, WDA_EXCLUDEFROMCAPTURE);
+                SetForegroundWindow(hwnd);
+            }
+        }
+        catch { }
+
+        // Position window across all connected monitors accurately in DIPs
+        // using physical virtual screen metrics divided by window DPI scale
+        var dpi = VisualTreeHelper.GetDpi(this);
+        double dpiX = dpi.DpiScaleX > 0 ? dpi.DpiScaleX : 1.0;
+        double dpiY = dpi.DpiScaleY > 0 ? dpi.DpiScaleY : 1.0;
+
+        int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+        int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+        int vw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+        int vh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+
+        Left = vx / dpiX;
+        Top = vy / dpiY;
+        Width = vw / dpiX;
+        Height = vh / dpiY;
 
         Activate();
         Focus();
@@ -34,23 +121,29 @@ public partial class RegionSelectionWindow : Window
     {
         if (e.Key == Key.Escape)
         {
-            IsCancelled = true;
-            Close();
+            CancelAndClose();
         }
     }
 
     private void OnMouseDown(object sender, MouseButtonEventArgs e)
     {
+        if (e.RightButton == MouseButtonState.Pressed)
+        {
+            CancelAndClose();
+            return;
+        }
+
         if (e.LeftButton == MouseButtonState.Pressed)
         {
-            _startPoint = e.GetPosition(SelectionCanvas);
+            _startDipPoint = e.GetPosition(SelectionCanvas);
+            GetCursorPos(out _startPhysPoint);
             _isSelecting = true;
 
             SelectionBox.Visibility = Visibility.Visible;
             DimensionBadge.Visibility = Visibility.Visible;
 
-            Canvas.SetLeft(SelectionBox, _startPoint.X);
-            Canvas.SetTop(SelectionBox, _startPoint.Y);
+            Canvas.SetLeft(SelectionBox, _startDipPoint.X);
+            Canvas.SetTop(SelectionBox, _startDipPoint.Y);
             SelectionBox.Width = 0;
             SelectionBox.Height = 0;
 
@@ -62,12 +155,13 @@ public partial class RegionSelectionWindow : Window
     {
         if (!_isSelecting) return;
 
-        var currentPoint = e.GetPosition(SelectionCanvas);
+        var currentDip = e.GetPosition(SelectionCanvas);
+        GetCursorPos(out var currentPhys);
 
-        double x = Math.Min(_startPoint.X, currentPoint.X);
-        double y = Math.Min(_startPoint.Y, currentPoint.Y);
-        double width = Math.Abs(currentPoint.X - _startPoint.X);
-        double height = Math.Abs(currentPoint.Y - _startPoint.Y);
+        double x = Math.Min(_startDipPoint.X, currentDip.X);
+        double y = Math.Min(_startDipPoint.Y, currentDip.Y);
+        double width = Math.Abs(currentDip.X - _startDipPoint.X);
+        double height = Math.Abs(currentDip.Y - _startDipPoint.Y);
 
         Canvas.SetLeft(SelectionBox, x);
         Canvas.SetTop(SelectionBox, y);
@@ -80,19 +174,10 @@ public partial class RegionSelectionWindow : Window
         Canvas.SetLeft(DimensionBadge, badgeX);
         Canvas.SetTop(DimensionBadge, badgeY);
 
-        // Convert current rectangle DIP to physical screen pixels for accurate pixel counter
-        try
-        {
-            var p1 = PointToScreen(new Point(x, y));
-            var p2 = PointToScreen(new Point(x + width, y + height));
-            int physW = (int)Math.Max(0, p2.X - p1.X);
-            int physH = (int)Math.Max(0, p2.Y - p1.Y);
-            DimensionText.Text = $"{physW} × {physH} px";
-        }
-        catch
-        {
-            DimensionText.Text = $"{(int)width} × {(int)height} px";
-        }
+        // Display exact physical screen pixels using Win32 cursor difference
+        int physW = Math.Abs(currentPhys.X - _startPhysPoint.X);
+        int physH = Math.Abs(currentPhys.Y - _startPhysPoint.Y);
+        DimensionText.Text = $"{physW} × {physH} px";
     }
 
     private void OnMouseUp(object sender, MouseButtonEventArgs e)
@@ -102,23 +187,16 @@ public partial class RegionSelectionWindow : Window
         _isSelecting = false;
         ReleaseMouseCapture();
 
-        var endPoint = e.GetPosition(SelectionCanvas);
-        double x = Math.Min(_startPoint.X, endPoint.X);
-        double y = Math.Min(_startPoint.Y, endPoint.Y);
-        double width = Math.Abs(endPoint.X - _startPoint.X);
-        double height = Math.Abs(endPoint.Y - _startPoint.Y);
+        GetCursorPos(out var endPhysPoint);
+
+        int physX = Math.Min(_startPhysPoint.X, endPhysPoint.X);
+        int physY = Math.Min(_startPhysPoint.Y, endPhysPoint.Y);
+        int physW = Math.Abs(endPhysPoint.X - _startPhysPoint.X);
+        int physH = Math.Abs(endPhysPoint.Y - _startPhysPoint.Y);
 
         // Require minimum selection to avoid accidental single clicks
-        if (width > 20 && height > 10)
+        if (physW > 20 && physH > 10)
         {
-            var screenTopLeft = PointToScreen(new Point(x, y));
-            var screenBottomRight = PointToScreen(new Point(x + width, y + height));
-
-            int physX = (int)Math.Round(screenTopLeft.X);
-            int physY = (int)Math.Round(screenTopLeft.Y);
-            int physW = (int)Math.Round(screenBottomRight.X - screenTopLeft.X);
-            int physH = (int)Math.Round(screenBottomRight.Y - screenTopLeft.Y);
-
             SelectedRegion = new ScreenRegion(physX, physY, physW, physH);
             IsCancelled = false;
         }
@@ -127,6 +205,22 @@ public partial class RegionSelectionWindow : Window
             IsCancelled = true;
         }
 
+        HideImmediatelyBeforeClose();
         Close();
+    }
+
+    private void CancelAndClose()
+    {
+        IsCancelled = true;
+        HideImmediatelyBeforeClose();
+        Close();
+    }
+
+    private void HideImmediatelyBeforeClose()
+    {
+        SelectionBox.Visibility = Visibility.Collapsed;
+        DimensionBadge.Visibility = Visibility.Collapsed;
+        Opacity = 0;
+        Visibility = Visibility.Hidden;
     }
 }

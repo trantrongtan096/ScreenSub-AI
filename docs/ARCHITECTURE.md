@@ -52,7 +52,7 @@ ScreenSubAI/
 - **Mode B — Follow Window**: Resolves the target `HWND` bounds with `DwmGetWindowAttribute(DWMWA_EXTENDED_FRAME_BOUNDS)` to exclude invisible drop shadows. Dynamically tracks window movement and resizing, and pauses capture if the window is minimized.
 
 ### 3.2. Snipping Tool Style Region Selector (`ScreenSub.Desktop/Views/RegionSelectionWindow`)
-- Invoked via button or global hotkey **`Ctrl + Shift + S`**.
+- Invoked via button or global hotkey **`Ctrl + Alt + Q`** (configurable in Settings).
 - Spans the entire virtual desktop with semi-transparent dimming and crosshair cursor.
 - Live selection rectangle drawn with neon cyan border (`#06B6D4`) and dynamic real-time dimension tag badge (`W × H px`).
 - Pressing `ESC` cancels the selection without altering previous settings.
@@ -85,3 +85,19 @@ ScreenSubAI/
 ### 3.7. Settings & Security (`ScreenSub.Infrastructure`)
 - Stores configuration in local SQLite database and `settings.json`.
 - Protects Azure API keys using **Windows Data Protection API (DPAPI)** via `ProtectedData.Protect` and `ProtectedData.Unprotect(..., DataProtectionScope.CurrentUser)`.
+
+### 3.8. Audio Realtime Translation & Whisper (`ScreenSub.Audio` & `ScreenSub.Speech`)
+- **WASAPI System Loopback Capture**: Low-latency capture of application audio (YouTube, movies, media players) directly from the default Windows render endpoint using NAudio WASAPI loopback.
+- **Energy-based Voice Activity Detection (VAD)**: Real-time RMS/peak audio analysis with hangover debounce (300ms–6000ms speech segments).
+- **Whisper Speech-to-Text**: Local speech recognition via `Whisper.net` and GGML quantization (`ggml-base.bin`, `ggml-small.bin`). Runs fully locally with zero network requirement.
+- **Unified Subtitle Overlay**: Transcribed speech is routed into the same translation pipeline and broadcast to the floating overlay window.
+
+### 3.9. Full Offline AI & GPU Acceleration (`ScreenSub.Translation` & `ScreenSub.Infrastructure`)
+- **`LocalTranslationProvider`**: Complete 100% offline neural translation engine. Eliminates cloud telemetry and internet dependence. Supports all 6 bidirectional pairs (En↔Vi, Zh↔Vi, En↔Zh).
+- **`LocalChineseConverter`**: High-performance bidirectional character conversion between Traditional Chinese (繁體中文) and Simplified Chinese (简体中文).
+- **`TranslationProviderResolver`**: Tri-mode resolver (`Online`, `Offline`, `Auto`). Enforces strict privacy by preventing silent cloud fallbacks when offline mode is selected.
+- **`HardwareCapabilityDetector`**: Probes CPU (cores, AVX2, AVX-512), system RAM, discrete and integrated GPUs (NVIDIA/AMD/Intel VRAM and driver), and dynamically selects the optimal inference backend (`DirectML`, `CPU`, `CUDA`).
+- **`LocalModelManager`**: Manages local AI model storage, SHA-256 integrity verification, activation, and removal for OCR, Speech, and Translation models under `%LocalAppData%/ScreenSubAI/Models`.
+- **Performance Profiles**: Three tuned profiles (`Fast`, `Balanced`, `Quality`) dynamically configuring worker threads, capture FPS, and VAD parameters.
+
+
