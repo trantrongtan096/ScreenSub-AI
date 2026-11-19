@@ -71,10 +71,12 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
     private long _rejectedStaleCount;
 
     private DateTime _lastTextSeenTime = DateTime.MinValue;
+    private DateTime _lastOcrSeenTimeUtc = DateTime.MinValue;
     private string _lastStableOcrText = string.Empty;
     private string _lastSubmittedOcrText = string.Empty;
     private long _lastSubmittedSettingsVersion;
     private string _lastStableSpeechText = string.Empty;
+    private bool _isOcrCurrentlyPresentOnScreen;
     private DateTime _lastOcrAttemptTime = DateTime.MinValue;
     private bool _hasOcrAttemptedUnchangedFrame;
     private int _unchangedEmptyOrFailureRetries;
@@ -376,6 +378,8 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
         CancelInFlightOcrTranslation();
         _lastStableOcrText = string.Empty;
         _lastSubmittedOcrText = string.Empty;
+        _lastOcrSeenTimeUtc = DateTime.MinValue;
+        _isOcrCurrentlyPresentOnScreen = false;
         _hasOcrAttemptedUnchangedFrame = false;
         _unchangedEmptyOrFailureRetries = 0;
         _engineNotReadyRetries = 0;
@@ -454,6 +458,8 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
         _lastStableOcrText = string.Empty;
         _lastSubmittedOcrText = string.Empty;
         _lastStableSpeechText = string.Empty;
+        _lastOcrSeenTimeUtc = DateTime.MinValue;
+        _isOcrCurrentlyPresentOnScreen = false;
         _hasOcrAttemptedUnchangedFrame = false;
         _unchangedEmptyOrFailureRetries = 0;
         _engineNotReadyRetries = 0;
@@ -527,6 +533,8 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
         _lastSubmittedOcrText = string.Empty;
         _lastStableSpeechText = string.Empty;
         _lastTextSeenTime = DateTime.MinValue;
+        _lastOcrSeenTimeUtc = DateTime.MinValue;
+        _isOcrCurrentlyPresentOnScreen = false;
         _lastOcrAttemptTime = DateTime.MinValue;
         _hasOcrAttemptedUnchangedFrame = false;
         _unchangedEmptyOrFailureRetries = 0;
@@ -691,6 +699,8 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
         _lastSubmittedOcrText = string.Empty;
         _lastStableSpeechText = string.Empty;
         _lastTextSeenTime = DateTime.MinValue;
+        _lastOcrSeenTimeUtc = DateTime.MinValue;
+        _isOcrCurrentlyPresentOnScreen = false;
         _lastOcrAttemptTime = DateTime.MinValue;
         _hasOcrAttemptedUnchangedFrame = false;
         _unchangedEmptyOrFailureRetries = 0;
@@ -878,6 +888,10 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                 if (!frameChanged && !forceRetryOcr)
                 {
                     Interlocked.Increment(ref _frameSkippedUnchangedCount);
+                    if (_isOcrCurrentlyPresentOnScreen && _consecutiveBlankFrames == 0 && !string.IsNullOrWhiteSpace(_lastStableOcrText))
+                    {
+                        _lastOcrSeenTimeUtc = DateTime.UtcNow;
+                    }
                     // No visual change: subtitle is still actively on screen! Keep subtitle visible.
                     await DelayRemainingAsync(loopStopwatch.Elapsed, interval, ct);
                     continue;
@@ -932,7 +946,7 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                 // Handle blank frame / transient empty OCR (Trường hợp C + bounded retry)
                 if (!ocrResult.HasText)
                 {
-                    OnBlankFrameDetected();
+                    OnBlankFrameDetected(frameChanged);
                     if (!CurrentSubtitle.HasContent)
                     {
                         PipelineStatusText = "Đang chờ phụ đề (Waiting for subtitles)";
@@ -943,8 +957,11 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                 }
 
                 _consecutiveBlankFrames = 0;
+                _isOcrCurrentlyPresentOnScreen = true;
                 OcrSuccessCount++;
-                _lastTextSeenTime = DateTime.UtcNow;
+                var ocrSeenNow = DateTime.UtcNow;
+                _lastTextSeenTime = ocrSeenNow;
+                _lastOcrSeenTimeUtc = ocrSeenNow;
                 LastOcrRawText = ocrResult.FullText;
 
                 // Analyze and segment multi-line / mixed-language OCR blocks
@@ -954,7 +971,7 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
 
                 if (string.IsNullOrWhiteSpace(analysis.PrimarySourceText))
                 {
-                    OnBlankFrameDetected();
+                    OnBlankFrameDetected(frameChanged);
                     if (!CurrentSubtitle.HasContent)
                     {
                         PipelineStatusText = "Đang chờ phụ đề (Waiting for subtitles)";
@@ -966,6 +983,7 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
 
                 _needsRetryAfterEmptyOrFailure = false;
                 _unchangedEmptyOrFailureRetries = 0;
+                _lastStableOcrText = analysis.PrimarySourceText;
 
                 LastNormalizedText = analysis.PrimarySourceText;
                 OcrTextRecognized?.Invoke(this, (analysis.PrimarySourceText, analysis.DetectedPrimaryLanguage));
@@ -975,7 +993,7 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                 long currentSettingsVer = SettingsVersion;
                 string compareBasis = !string.IsNullOrEmpty(_lastSubmittedOcrText) && _lastSubmittedSettingsVersion == currentSettingsVer
                     ? _lastSubmittedOcrText
-                    : _lastStableOcrText;
+                    : string.Empty;
 
                 bool isDuplicate = string.Equals(analysis.PrimarySourceText, compareBasis, StringComparison.Ordinal)
                     || (!string.IsNullOrEmpty(compareBasis) && SubtitleTextProcessor.CalculateSimilarity(analysis.PrimarySourceText, compareBasis) >= 0.88)
@@ -1091,6 +1109,7 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
             if (isOcr)
             {
                 _lastStableOcrText = subtitle.OriginalText;
+                _lastOcrSeenTimeUtc = DateTime.UtcNow;
             }
 
             lock (_conversationContext)
@@ -1374,14 +1393,15 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                         continue;
                     }
 
-                    // In Hybrid mode: if OCR already has content and matches/contains/is-highly-similar to this speech, avoid overwriting
-                    if (Mode == TranslationMode.Hybrid && !string.IsNullOrWhiteSpace(_lastStableOcrText))
+                    // In Hybrid mode: only suppress speech when an active (non-stale) OCR subtitle is currently present on screen and semantically equivalent
+                    if (Mode == TranslationMode.Hybrid && _isOcrCurrentlyPresentOnScreen && !string.IsNullOrWhiteSpace(_lastStableOcrText))
                     {
-                        string ocrCanon = NormalizeForDuplicateComparison(_lastStableOcrText);
-                        if (!string.IsNullOrEmpty(speechCanon) && !string.IsNullOrEmpty(ocrCanon) &&
-                            (ocrCanon.Contains(speechCanon, StringComparison.OrdinalIgnoreCase) ||
-                             speechCanon.Contains(ocrCanon, StringComparison.OrdinalIgnoreCase) ||
-                             SubtitleTextProcessor.CalculateSimilarity(ocrCanon, speechCanon) >= 0.78))
+                        if (SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+                            _lastStableOcrText,
+                            normalizedSpeech,
+                            _lastOcrSeenTimeUtc,
+                            DateTime.UtcNow,
+                            LocalChineseConverter.ToSimplified))
                         {
                             Interlocked.Increment(ref _duplicateSuppressedCount);
                             continue;
@@ -1457,9 +1477,18 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
         }
     }
 
-    private void OnBlankFrameDetected()
+    private void OnBlankFrameDetected(bool frameChanged = false)
     {
         _consecutiveBlankFrames++;
+        // If the screen visually changed (`frameChanged == true`) and OCR returned no text, or if we have seen >= 2 consecutive blank OCRs,
+        // the subtitle has visually disappeared from the screen — immediately mark OCR as absent so delayed speech in Hybrid mode is not suppressed.
+        if (frameChanged || _consecutiveBlankFrames >= 2 || _unchangedEmptyOrFailureRetries >= MaxUnchangedEmptyOrFailedOcrRetries)
+        {
+            _isOcrCurrentlyPresentOnScreen = false;
+            _lastOcrSeenTimeUtc = DateTime.MinValue;
+            _lastStableOcrText = string.Empty;
+        }
+
         // Do not prematurely hide/clear subtitles on temporary dropped frames or brief pauses between dialogue!
         // Require at least 16 consecutive blank frames AND at least 6.5s since text was last seen so brief OCR misses or short dialogue gaps don't cause hide/show flicker.
         if (CurrentSubtitle.HasContent && _consecutiveBlankFrames >= 16 && _lastTextSeenTime != DateTime.MinValue)
@@ -1471,6 +1500,8 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
                 _lastSubmittedOcrText = string.Empty;
                 _lastStableSpeechText = string.Empty;
                 _lastTextSeenTime = DateTime.MinValue;
+                _lastOcrSeenTimeUtc = DateTime.MinValue;
+                _isOcrCurrentlyPresentOnScreen = false;
                 _consecutiveBlankFrames = 0;
                 ClearSubtitle();
             }

@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
 using FluentAssertions;
+using Moq;
 using ScreenSub.Audio.Capture;
 using ScreenSub.Audio.VAD;
 using ScreenSub.Capture;
@@ -305,18 +306,17 @@ setTimeout(tryStart, 1500);
         return captured;
     }
 
-    [Fact]
+    [HardwareFact(requiresEdge: true, requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task Phase2_RealEnglishMultiSpeakerDialogue_AutoVsEnglish_And_WithNoContextVsCarryContext_ShouldValidateQualityAndLatency()
     {
-        string edgeExe = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
-        if (!File.Exists(edgeExe) || !WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
-        {
-            return;
-        }
-
+        string edgeExe = HardwareFactAttribute.EdgeExecutablePath;
+        File.Exists(edgeExe).Should().BeTrue("Microsoft Edge must exist for real browser audio/video E2E validation");
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist for real Whisper validation");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
         using (var devCheck = new WasapiAudioCaptureService())
         {
-            if (devCheck.GetOutputDevices().Count == 0) return;
+            devCheck.GetOutputDevices().Count.Should().BeGreaterThan(0, "at least one active WASAPI output device is required");
         }
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"rw_en_qa_{Guid.NewGuid():N}");
@@ -506,18 +506,17 @@ setTimeout(tryStart, 1500);
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresEdge: true, requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task Phase3_RealChineseAudioAndHybridValidation_SimplifiedAndTraditional_AutoVsChinese_M2M100AndHybridDedup()
     {
-        string edgeExe = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
-        if (!File.Exists(edgeExe) || !WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
-        {
-            return;
-        }
-
+        string edgeExe = HardwareFactAttribute.EdgeExecutablePath;
+        File.Exists(edgeExe).Should().BeTrue("Microsoft Edge must exist for real Chinese audio/hybrid E2E validation");
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist for real Whisper validation");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
         using (var devCheck = new WasapiAudioCaptureService())
         {
-            if (devCheck.GetOutputDevices().Count == 0) return;
+            devCheck.GetOutputDevices().Count.Should().BeGreaterThan(0, "at least one active WASAPI output device is required");
         }
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"rw_zh_qa_{Guid.NewGuid():N}");
@@ -749,18 +748,17 @@ setTimeout(tryStart, 1500);
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresEdge: true, requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task Phase4_RealtimeConcurrency_SimultaneousOcrWhisperAndUncachedTranslation_CpuContentionAudit()
     {
-        string edgeExe = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
-        if (!File.Exists(edgeExe) || !WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
-        {
-            return;
-        }
-
+        string edgeExe = HardwareFactAttribute.EdgeExecutablePath;
+        File.Exists(edgeExe).Should().BeTrue("Microsoft Edge must exist for real concurrency E2E validation");
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist for real Whisper validation");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
         using (var devCheck = new WasapiAudioCaptureService())
         {
-            if (devCheck.GetOutputDevices().Count == 0) return;
+            devCheck.GetOutputDevices().Count.Should().BeGreaterThan(0, "at least one active WASAPI output device is required");
         }
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"rw_concurrency_{Guid.NewGuid():N}");
@@ -1074,6 +1072,442 @@ setInterval(() => {
                 catch { }
             }
             try { if (Directory.Exists(tempDir)) Directory.Delete(tempDir, true); } catch { }
+        }
+    }
+
+    [Fact]
+    public async Task HybridCoordinator_SemanticDeduplicationSafety_ShouldSuppressEquivalentAndPublishOppositeOrDistinctMeaning()
+    {
+        var settings = new AppSettings
+        {
+            CaptureFps = 10,
+            TranslationMode = TranslationMode.Hybrid,
+            SourceLanguage = SourceLanguage.Chinese,
+            TargetLanguages = [TargetLanguage.Vietnamese],
+            DisplayMode = DisplayMode.Dual,
+            LastRegion = new ScreenRegion(0, 0, 800, 120)
+        };
+        var settingsMock = new Moq.Mock<ScreenSub.Core.Interfaces.ISettingsService>();
+        settingsMock.Setup(s => s.Settings).Returns(settings);
+        settingsMock.Setup(s => s.SaveSettingsAsync()).Returns(Task.CompletedTask);
+
+        string currentOcrText = "请在离开办公室之前打开所有的电脑电源。";
+        int frameCounter = 0;
+
+        var capMock = new Moq.Mock<ScreenSub.Core.Interfaces.IScreenCaptureService>();
+        capMock.Setup(c => c.CaptureWithDiagnosticsAsync(
+                Moq.It.IsAny<ScreenRegion>(), Moq.It.IsAny<WindowInfo?>(),
+                Moq.It.IsAny<RegionMode>(), Moq.It.IsAny<CaptureSourceType>(),
+                Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new CaptureFrameResult
+            {
+                ImageBytes = [(byte)(Interlocked.Increment(ref frameCounter) % 250 + 1)],
+                ErrorKind = CaptureErrorKind.None,
+                CaptureLatencyMs = 1
+            });
+
+        var chMock = new Moq.Mock<ScreenSub.Core.Interfaces.IFrameChangeDetector>();
+        chMock.Setup(d => d.HasFrameChanged(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<double>())).Returns(true);
+
+        var ocrMock = new Moq.Mock<ScreenSub.Core.Interfaces.IOcrEngine>();
+        ocrMock.Setup(o => o.Status).Returns(ServiceStatus.Running);
+        ocrMock.Setup(o => o.StatusMessage).Returns("Running");
+        ocrMock.Setup(o => o.RecognizeAsync(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                string txt = Volatile.Read(ref currentOcrText);
+                return new OcrResult
+                {
+                    FullText = txt,
+                    Confidence = 0.99,
+                    Lines = [new OcrLine { Text = txt, Confidence = 0.99 }]
+                };
+            });
+
+        var provMock = new Moq.Mock<ScreenSub.Core.Interfaces.ITranslationProvider>();
+        provMock.Setup(p => p.ProviderName).Returns("TestTranslator");
+        provMock.Setup(p => p.Status).Returns(ServiceStatus.Connected);
+        provMock.Setup(p => p.StatusMessage).Returns("Ready");
+        provMock.Setup(p => p.TranslateAsync(
+                Moq.It.IsAny<string>(), Moq.It.IsAny<SourceLanguage>(),
+                Moq.It.IsAny<IReadOnlyList<TargetLanguage>>(), Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync((string t, SourceLanguage _, IReadOnlyList<TargetLanguage> _, CancellationToken _) =>
+                new TranslationResult
+                {
+                    OriginalText = t,
+                    DetectedLanguage = "zh",
+                    Translations = new Dictionary<TargetLanguage, string> { [TargetLanguage.Vietnamese] = $"VI:{t}" },
+                    LatencyMs = 5,
+                    ProviderName = "TestTranslator"
+                });
+
+        var resMock = new Moq.Mock<ScreenSub.Core.Interfaces.ITranslationProviderResolver>();
+        resMock.Setup(r => r.ResolveActiveProvider()).Returns(provMock.Object);
+        resMock.Setup(r => r.GetProvider(Moq.It.IsAny<TranslationEngineMode>())).Returns(provMock.Object);
+        resMock.Setup(r => r.ActiveProviderBadgeText).Returns("TEST");
+
+        var audioMock = new Moq.Mock<ScreenSub.Core.Interfaces.IAudioCaptureService>();
+        audioMock.Setup(a => a.GetOutputDevices()).Returns([]);
+        var vadMock = new Moq.Mock<ScreenSub.Core.Interfaces.IVoiceActivityDetector>();
+
+        string nextSpeechText = string.Empty;
+        var speechMock = new Moq.Mock<ScreenSub.Core.Interfaces.ISpeechRecognitionService>();
+        speechMock.Setup(s => s.IsModelLoaded).Returns(true);
+        speechMock.Setup(s => s.Status).Returns(ServiceStatus.Running);
+        speechMock.Setup(s => s.RecognizeAsync(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<string>(), Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new SpeechRecognitionResult
+            {
+                Text = Volatile.Read(ref nextSpeechText),
+                DetectedLanguage = "zh",
+                Confidence = 0.95,
+                IsFinal = true,
+                LatencyMs = 10
+            });
+
+        await using var coord = new SubtitleCoordinator(
+            capMock.Object, ocrMock.Object, resMock.Object, settingsMock.Object, chMock.Object,
+            audioMock.Object, vadMock.Object, speechMock.Object);
+
+        TaskCompletionSource<SubtitleItem>? ocrPubTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<SubtitleItem>? audioPubTcs = null;
+        TaskCompletionSource<SpeechRecognitionResult>? speechRecTcs = null;
+
+        coord.SpeechRecognized += (_, sr) => speechRecTcs?.TrySetResult(sr);
+        coord.SubtitleUpdated += (_, sub) =>
+        {
+            if (!sub.HasContent) return;
+            if (sub.SourceMode == TranslationMode.ScreenOcr) ocrPubTcs?.TrySetResult(sub);
+            else if (sub.SourceMode == TranslationMode.AudioRealtime) audioPubTcs?.TrySetResult(sub);
+        };
+
+        coord.Start();
+        await ocrPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // 1. Opposite action (打开 vs 关闭): MUST NOT suppress — must publish AudioRealtime subtitle!
+        Volatile.Write(ref nextSpeechText, "请在离开办公室之前关闭所有的电脑电源。");
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 1, PcmData = new byte[3200] });
+        var pubOpposite = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubOpposite.OriginalText.Should().Be("请在离开办公室之前关闭所有的电脑电源。");
+
+        // 2. Different time (三点 vs 四点): MUST NOT suppress!
+        ocrPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Volatile.Write(ref currentOcrText, "我们明天下午三点在台北车站见面。");
+        await ocrPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Volatile.Write(ref nextSpeechText, "我们明天下午四点在台北车站见面。");
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 2, PcmData = new byte[3200] });
+        var pubTime = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubTime.OriginalText.Should().Be("我们明天下午四点在台北车站见面。");
+
+        // 3. True Traditional + 1-word homophone of active OCR: MUST suppress!
+        ocrPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        Volatile.Write(ref currentOcrText, "你好，欢迎大家参加今天的软件测试会议。");
+        await ocrPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        Volatile.Write(ref nextSpeechText, "你好 歡迎大家參加今天的軟件措施會議");
+        speechRecTcs = new TaskCompletionSource<SpeechRecognitionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        long dupBefore = coord.DuplicateSuppressedCount;
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 3, PcmData = new byte[3200] });
+        await speechRecTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(250);
+        audioPubTcs.Task.IsCompleted.Should().BeFalse("equivalent/homophone speech must be suppressed in Hybrid mode");
+        coord.DuplicateSuppressedCount.Should().BeGreaterThan(dupBefore);
+
+        coord.Stop();
+    }
+
+    [Fact]
+    public async Task HybridCoordinator_OcrFreshnessLifecycle_Static5s10s15s_Disappear_InFlightChange_StopRestart_And_RegionChange()
+    {
+        var settings = new AppSettings
+        {
+            CaptureFps = 10,
+            TranslationMode = TranslationMode.Hybrid,
+            SourceLanguage = SourceLanguage.English,
+            TargetLanguages = [TargetLanguage.Vietnamese],
+            DisplayMode = DisplayMode.Dual,
+            LastRegion = new ScreenRegion(0, 0, 800, 120)
+        };
+        var settingsMock = new Moq.Mock<ScreenSub.Core.Interfaces.ISettingsService>();
+        settingsMock.Setup(s => s.Settings).Returns(settings);
+        settingsMock.Setup(s => s.SaveSettingsAsync()).Returns(Task.CompletedTask);
+
+        string currentOcrText = "Welcome to the security conference.";
+        byte currentFrameByte = 10;
+
+        var capMock = new Moq.Mock<ScreenSub.Core.Interfaces.IScreenCaptureService>();
+        capMock.Setup(c => c.CaptureWithDiagnosticsAsync(
+                Moq.It.IsAny<ScreenRegion>(), Moq.It.IsAny<WindowInfo?>(),
+                Moq.It.IsAny<RegionMode>(), Moq.It.IsAny<CaptureSourceType>(),
+                Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() => new CaptureFrameResult
+            {
+                ImageBytes = [Volatile.Read(ref currentFrameByte)],
+                ErrorKind = CaptureErrorKind.None,
+                CaptureLatencyMs = 1
+            });
+
+        // Simulate realistic frame change detector: only returns true when frame byte changes
+        byte lastSeenByte = 0;
+        var chMock = new Moq.Mock<ScreenSub.Core.Interfaces.IFrameChangeDetector>();
+        chMock.Setup(d => d.HasFrameChanged(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<double>()))
+            .Returns((byte[] bytes, double _) =>
+            {
+                byte b = bytes.Length > 0 ? bytes[0] : (byte)0;
+                if (b != lastSeenByte)
+                {
+                    lastSeenByte = b;
+                    return true;
+                }
+                return false;
+            });
+        chMock.Setup(d => d.Reset()).Callback(() => lastSeenByte = 0);
+
+        var ocrMock = new Moq.Mock<ScreenSub.Core.Interfaces.IOcrEngine>();
+        ocrMock.Setup(o => o.Status).Returns(ServiceStatus.Running);
+        ocrMock.Setup(o => o.StatusMessage).Returns("Running");
+        ocrMock.Setup(o => o.RecognizeAsync(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<CancellationToken>()))
+            .ReturnsAsync(() =>
+            {
+                string txt = Volatile.Read(ref currentOcrText);
+                if (string.IsNullOrEmpty(txt))
+                {
+                    return new OcrResult { FullText = string.Empty, Confidence = 0, Lines = [] };
+                }
+                return new OcrResult
+                {
+                    FullText = txt,
+                    Confidence = 0.99,
+                    Lines = [new OcrLine { Text = txt, Confidence = 0.99 }]
+                };
+            });
+
+        int ocrTranslateDelayMs = 5;
+        var provMock = new Moq.Mock<ScreenSub.Core.Interfaces.ITranslationProvider>();
+        provMock.Setup(p => p.ProviderName).Returns("TestTranslator");
+        provMock.Setup(p => p.Status).Returns(ServiceStatus.Connected);
+        provMock.Setup(p => p.StatusMessage).Returns("Ready");
+        provMock.Setup(p => p.TranslateAsync(
+                Moq.It.IsAny<string>(), Moq.It.IsAny<SourceLanguage>(),
+                Moq.It.IsAny<IReadOnlyList<TargetLanguage>>(), Moq.It.IsAny<CancellationToken>()))
+            .Returns(async (string t, SourceLanguage _, IReadOnlyList<TargetLanguage> _, CancellationToken ct) =>
+            {
+                int delay = Volatile.Read(ref ocrTranslateDelayMs);
+                if (delay > 0) await Task.Delay(delay, ct);
+                return new TranslationResult
+                {
+                    OriginalText = t,
+                    DetectedLanguage = "en",
+                    Translations = new Dictionary<TargetLanguage, string> { [TargetLanguage.Vietnamese] = $"VI:{t}" },
+                    LatencyMs = delay,
+                    ProviderName = "TestTranslator"
+                };
+            });
+
+        var resMock = new Moq.Mock<ScreenSub.Core.Interfaces.ITranslationProviderResolver>();
+        resMock.Setup(r => r.ResolveActiveProvider()).Returns(provMock.Object);
+        resMock.Setup(r => r.GetProvider(Moq.It.IsAny<TranslationEngineMode>())).Returns(provMock.Object);
+        resMock.Setup(r => r.ActiveProviderBadgeText).Returns("TEST");
+
+        var audioMock = new Moq.Mock<ScreenSub.Core.Interfaces.IAudioCaptureService>();
+        audioMock.Setup(a => a.GetOutputDevices()).Returns([]);
+        var vadMock = new Moq.Mock<ScreenSub.Core.Interfaces.IVoiceActivityDetector>();
+
+        string nextSpeechText = string.Empty;
+        TaskCompletionSource? whisperEnteredTcs = null;
+        TaskCompletionSource? whisperReleaseTcs = null;
+
+        var speechMock = new Moq.Mock<ScreenSub.Core.Interfaces.ISpeechRecognitionService>();
+        speechMock.Setup(s => s.IsModelLoaded).Returns(true);
+        speechMock.Setup(s => s.Status).Returns(ServiceStatus.Running);
+        speechMock.Setup(s => s.RecognizeAsync(Moq.It.IsAny<byte[]>(), Moq.It.IsAny<string>(), Moq.It.IsAny<CancellationToken>()))
+            .Returns(async (byte[] _, string _, CancellationToken ct) =>
+            {
+                whisperEnteredTcs?.TrySetResult();
+                if (whisperReleaseTcs != null)
+                {
+                    await whisperReleaseTcs.Task.WaitAsync(ct);
+                }
+                return new SpeechRecognitionResult
+                {
+                    Text = Volatile.Read(ref nextSpeechText),
+                    DetectedLanguage = "en",
+                    Confidence = 0.95,
+                    IsFinal = true,
+                    LatencyMs = 15
+                };
+            });
+
+        await using var coord = new SubtitleCoordinator(
+            capMock.Object, ocrMock.Object, resMock.Object, settingsMock.Object, chMock.Object,
+            audioMock.Object, vadMock.Object, speechMock.Object);
+
+        TaskCompletionSource<SubtitleItem>? ocrPubTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        TaskCompletionSource<SubtitleItem>? audioPubTcs = null;
+        TaskCompletionSource<SpeechRecognitionResult>? speechRecTcs = null;
+
+        coord.SpeechRecognized += (_, sr) => speechRecTcs?.TrySetResult(sr);
+        coord.SubtitleUpdated += (_, sub) =>
+        {
+            if (!sub.HasContent) return;
+            if (sub.SourceMode == TranslationMode.ScreenOcr) ocrPubTcs?.TrySetResult(sub);
+            else if (sub.SourceMode == TranslationMode.AudioRealtime) audioPubTcs?.TrySetResult(sub);
+        };
+
+        coord.Start();
+        await ocrPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // CASE A: Static OCR frame for 5s, 10s, 15s (simulated by unchanged frame byte continuing to refresh _lastOcrSeenTimeUtc)
+        // 1) After 5.2 seconds of static frame
+        await Task.Delay(5200);
+        Volatile.Write(ref nextSpeechText, "Welcome to the security conference.");
+        speechRecTcs = new TaskCompletionSource<SpeechRecognitionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        long dupBefore5s = coord.DuplicateSuppressedCount;
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 10, PcmData = new byte[3200] });
+        await speechRecTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(150);
+        audioPubTcs.Task.IsCompleted.Should().BeFalse("static OCR still visible on screen after 5s must still suppress identical speech");
+        coord.DuplicateSuppressedCount.Should().BeGreaterThan(dupBefore5s);
+
+        // 2) After 10.2 seconds cumulative of static frame
+        await Task.Delay(5000);
+        speechRecTcs = new TaskCompletionSource<SpeechRecognitionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        long dupBefore10s = coord.DuplicateSuppressedCount;
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 101, PcmData = new byte[3200] });
+        await speechRecTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(150);
+        audioPubTcs.Task.IsCompleted.Should().BeFalse("static OCR still visible on screen after 10s must still suppress identical speech");
+        coord.DuplicateSuppressedCount.Should().BeGreaterThan(dupBefore10s);
+
+        // 3) After 15.2 seconds cumulative of static frame
+        await Task.Delay(5000);
+        speechRecTcs = new TaskCompletionSource<SpeechRecognitionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        long dupBefore15s = coord.DuplicateSuppressedCount;
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 102, PcmData = new byte[3200] });
+        await speechRecTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(150);
+        audioPubTcs.Task.IsCompleted.Should().BeFalse("static OCR still visible on screen after 15s must still suppress identical speech");
+        coord.DuplicateSuppressedCount.Should().BeGreaterThan(dupBefore15s);
+
+        // Also while static OCR is at 15s, an opposite-meaning speech MUST NOT be suppressed!
+        Volatile.Write(ref nextSpeechText, "Do not welcome to the security conference.");
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 103, PcmData = new byte[3200] });
+        var pubOppositeAt15s = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubOppositeAt15s.OriginalText.Should().Be("Do not welcome to the security conference.");
+
+        // CASE B: OCR disappears on screen (blank frame), then Speech arrives shortly after (< 1s later) -> MUST NOT suppress!
+        Volatile.Write(ref currentOcrText, string.Empty);
+        Volatile.Write(ref currentFrameByte, 20); // Frame visually changes to blank
+        await Task.Delay(350); // Allow 2-3 blank frames to be processed (well before the 6.5s overlay clear timeout)
+
+        // Reset last speech text by sending a new speech matching the vanished OCR
+        Volatile.Write(ref nextSpeechText, "Welcome to the security conference!");
+        // Note: first clear _lastStableSpeechText by recognizing a short transition or changing regions? Wait: in Case A, _lastStableSpeechText was NOT set because Case A was suppressed BEFORE _lastStableSpeechText = normalizedSpeech!
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 11, PcmData = new byte[3200] });
+        var pubAfterOcrVanished = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubAfterOcrVanished.OriginalText.Should().Be("Welcome to the security conference!");
+
+        // CASE C: OCR changes to Sentence B while Whisper is still processing Sentence A -> Sentence A must NOT be suppressed if it differs from B, and if OCR changes to Sentence C while Whisper processes Sentence C (even before C's translation finishes), C MUST be suppressed!
+        Volatile.Write(ref currentOcrText, "First subtitle on screen.");
+        Volatile.Write(ref currentFrameByte, 30);
+        ocrPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await ocrPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // Start Whisper processing for "Second subtitle on screen." while OCR also switches to "Second subtitle on screen." with slow OCR translation (400ms)
+        whisperEnteredTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        whisperReleaseTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        Volatile.Write(ref nextSpeechText, "Second subtitle on screen.");
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 12, PcmData = new byte[3200] });
+        await whisperEnteredTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+
+        // While Whisper is mid-inference, OCR recognizes "Second subtitle on screen." (even while OCR translation takes 400ms)
+        Volatile.Write(ref ocrTranslateDelayMs, 400);
+        Volatile.Write(ref currentOcrText, "Second subtitle on screen.");
+        Volatile.Write(ref currentFrameByte, 40);
+        await Task.Delay(180); // OCR recognition finished, OCR translation still in flight
+
+        speechRecTcs = new TaskCompletionSource<SpeechRecognitionResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        long dupBeforeInFlight = coord.DuplicateSuppressedCount;
+        whisperReleaseTcs.TrySetResult();
+        await speechRecTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        await Task.Delay(150);
+        audioPubTcs.Task.IsCompleted.Should().BeFalse("when OCR already recognized 'Second subtitle on screen.', completing Whisper with the same sentence must be suppressed");
+        coord.DuplicateSuppressedCount.Should().BeGreaterThan(dupBeforeInFlight);
+        whisperEnteredTcs = null;
+        whisperReleaseTcs = null;
+        Volatile.Write(ref ocrTranslateDelayMs, 5);
+
+        // CASE D: Region change resets OCR state immediately -> Speech of old OCR text must NOT be suppressed if OCR is now blank
+        Volatile.Write(ref currentOcrText, string.Empty);
+        Volatile.Write(ref currentFrameByte, 50);
+        coord.UpdateSelectedRegion(new ScreenRegion(10, 10, 600, 100));
+        await Task.Delay(150);
+
+        Volatile.Write(ref nextSpeechText, "Second subtitle on screen.");
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 13, PcmData = new byte[3200] });
+        var pubAfterRegionReset = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubAfterRegionReset.OriginalText.Should().Be("Second subtitle on screen.");
+
+        // CASE E: Stop / Restart resets all OCR & Speech dedup state cleanly
+        coord.Stop();
+        coord.CurrentSubtitle.HasContent.Should().BeFalse();
+        coord.Start();
+        await Task.Delay(150);
+
+        Volatile.Write(ref nextSpeechText, "Second subtitle on screen.");
+        audioPubTcs = new TaskCompletionSource<SubtitleItem>(TaskCreationOptions.RunContinuationsAsynchronously);
+        vadMock.Raise(v => v.SpeechSegmentReady += null, vadMock.Object, new SpeechSegment { Id = 14, PcmData = new byte[3200] });
+        var pubAfterRestart = await audioPubTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        pubAfterRestart.OriginalText.Should().Be("Second subtitle on screen.");
+
+        coord.Stop();
+    }
+
+    [Fact]
+    public void HardwareFactAttribute_Audit_ShouldReportExplicitSkipWhenPrerequisiteMissingAndNeverSilentPass()
+    {
+        // 1. Verify that when all prerequisites are false, Skip is null (test executes normally)
+        var noReqAttr = new HardwareFactAttribute(
+            requiresEdge: false,
+            requiresWhisperBase: false,
+            requiresTranslationModel: false,
+            requiresAudioOutput: false);
+        noReqAttr.Skip.Should().BeNull();
+
+        // 2. Verify that when a prerequisite is missing, HardwareFactAttribute sets an explicit SKIP reason
+        var missingEdgeAttr = new HardwareFactAttribute(
+            requiresEdge: false,
+            requiresWhisperBase: false,
+            requiresTranslationModel: false,
+            requiresAudioOutput: false,
+            customExecutablePathRequirement: @"C:\NonExistentPath\missing_prereq_binary_12345.exe");
+        missingEdgeAttr.Skip.Should().NotBeNullOrWhiteSpace();
+        missingEdgeAttr.Skip.Should().StartWith("SKIPPED — Missing hardware/model prerequisite(s):");
+        missingEdgeAttr.Skip.Should().Contain("missing_prereq_binary_12345.exe");
+
+        // 3. Verify that on this release validation machine, all 10 [HardwareFact] methods across IntegrationTests have Skip == null (0 Skipped)
+        var hardwareTestMethods = typeof(RealWorldAudioAndConcurrencyTests).Assembly
+            .GetTypes()
+            .SelectMany(t => t.GetMethods(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
+            .Select(m => (Method: m, Attr: System.Reflection.CustomAttributeExtensions.GetCustomAttribute<HardwareFactAttribute>(m)))
+            .Where(x => x.Attr != null)
+            .ToList();
+
+        hardwareTestMethods.Count.Should().Be(10, "all 10 hardware E2E tests must be decorated with [HardwareFact]");
+        foreach (var (method, attr) in hardwareTestMethods)
+        {
+            attr!.Skip.Should().BeNull(
+                $"Hardware release gate requires '{method.DeclaringType?.Name}.{method.Name}' to execute on real hardware and NOT be skipped");
         }
     }
 }

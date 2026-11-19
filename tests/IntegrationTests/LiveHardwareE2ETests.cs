@@ -55,14 +55,13 @@ public class LiveHardwareE2ETests
         throw new FileNotFoundException($"Could not locate {Path.Combine(parts)}");
     }
 
-    [Fact]
+    [HardwareFact(requiresEdge: true, requiresTranslationModel: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task LiveEdgePlayerWindow_FullPipeline_CaptureOcrEnViT5OverlayAndPauseResumeStop_ShouldWorkEndToEnd()
     {
-        string edgeExe = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
-        if (!File.Exists(edgeExe) || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
-        {
-            return;
-        }
+        string edgeExe = HardwareFactAttribute.EdgeExecutablePath;
+        File.Exists(edgeExe).Should().BeTrue("Microsoft Edge must exist for live window E2E test");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
 
         string tempDir = Path.Combine(Path.GetTempPath(), "ScreenSub_EdgeE2E_" + Guid.NewGuid().ToString("N"));
         string userDataDir = Path.Combine(tempDir, "edge_profile");
@@ -274,12 +273,13 @@ public class LiveHardwareE2ETests
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task RealSpokenTtsAudio_PlaybackThroughSpeakers_WasapiHardwareLoopbackAndVad_ShouldEmitSpeechSegment()
     {
         using var wasapi = new WasapiAudioCaptureService();
         var devices = wasapi.GetOutputDevices();
-        if (devices.Count == 0) return;
+        devices.Count.Should().BeGreaterThan(0, "active WASAPI output device is required");
 
         string wavPath = Path.Combine(Path.GetTempPath(), $"screensub_tts_{Guid.NewGuid():N}.wav");
         try
@@ -432,13 +432,11 @@ public class LiveHardwareE2ETests
         return (long)Math.Round(sorted[lo] * (1.0 - frac) + sorted[hi] * frac);
     }
 
-    [Fact]
+    [HardwareFact(requiresWhisperBase: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task LocalModelManager_WhisperBase_VerifyModelIntegrityAsync_ShouldPassOfficialSha256()
     {
-        if (!WhisperModelManager.IsModelAvailable("base"))
-        {
-            return;
-        }
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist for SHA-256 verification");
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"screensub_whisper_chk_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -468,21 +466,16 @@ public class LiveHardwareE2ETests
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task RealWhisperPipeline_WasapiToVadToWhisperToEnViT5ToOverlay_MultiUtteranceAndStopRestart_ShouldSucceed()
     {
-        if (!WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
+        using (var checkAudio = new WasapiAudioCaptureService())
         {
-            return;
+            checkAudio.GetOutputDevices().Count.Should().BeGreaterThan(0, "active WASAPI output device is required");
         }
-
-        using var checkAudio = new WasapiAudioCaptureService();
-        var devices = checkAudio.GetOutputDevices();
-        if (devices.Count == 0)
-        {
-            return;
-        }
-        checkAudio.Dispose();
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"screensub_whisper_e2e_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -703,21 +696,18 @@ public class LiveHardwareE2ETests
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresEdge: true, requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task RealWhisperHybridMode_OcrAndSpeechConcurrent_ShouldDeduplicateMatchingTextAndTranslateDistinctSpeech()
     {
-        string edgeExe = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
-        if (!File.Exists(edgeExe) || !WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
+        string edgeExe = HardwareFactAttribute.EdgeExecutablePath;
+        File.Exists(edgeExe).Should().BeTrue("Microsoft Edge must exist");
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
+        using (var checkAudio = new WasapiAudioCaptureService())
         {
-            return;
+            checkAudio.GetOutputDevices().Count.Should().BeGreaterThan(0, "active WASAPI output device is required");
         }
-
-        using var checkAudio = new WasapiAudioCaptureService();
-        if (checkAudio.GetOutputDevices().Count == 0)
-        {
-            return;
-        }
-        checkAudio.Dispose();
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"screensub_hybrid_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);

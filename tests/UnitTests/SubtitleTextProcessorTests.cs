@@ -197,5 +197,205 @@ public class SubtitleTextProcessorTests
         var result = SubtitleTextProcessor.CleanTranslationOutput(input);
         result.Should().Be("你好，我很高兴见到你。");
     }
+
+    [Theory]
+    [InlineData("请在离开办公室之前打开所有的电脑电源。", "请在离开办公室之前关闭所有的电脑电源。")]
+    [InlineData("请立即开启服务器防火墙。", "请立即关闭服务器防火墙。")]
+    [InlineData("请把这份加密文件上传到内部服务器。", "请把这份加密文件下载到内部服务器。")]
+    [InlineData("系统已经允许外部设备的连接请求。", "系统已经拒绝外部设备的连接请求。")]
+    [InlineData("我们需要增加数据库连接池的容量。", "我们需要减少数据库连接池的容量。")]
+    [InlineData("请在这份合同上面签字确认。", "请在这份合同下面签字确认。")]
+    [InlineData("这趟列车是开往上海虹桥方向的。", "这趟列车是离开上海虹桥方向的。")]
+    [InlineData("这个季度的服务器负载明显上升了。", "这个季度的服务器负载明显下降了。")]
+    [InlineData("请先把重要的数据备份保存起来。", "请先把重要的数据备份删除掉。")]
+    [InlineData("Please turn on the main power switch before leaving.", "Please turn off the main power switch before leaving.")]
+    [InlineData("Please open the window before leaving the room.", "Please close the window before leaving the room.")]
+    [InlineData("Please lock the front door before heading home.", "Please unlock the front door before heading home.")]
+    [InlineData("Please enable the firewall on the primary node.", "Please disable the firewall on the primary node.")]
+    [InlineData("We should encrypt the backup archive before uploading.", "We should decrypt the backup archive before uploading.")]
+    [InlineData("Please import the configuration file from the shared folder.", "Please export the configuration file from the shared folder.")]
+    [InlineData("The administrator approved the deployment request.", "The administrator rejected the deployment request.")]
+    [InlineData("The security audit succeeded on the production cluster.", "The security audit failed on the production cluster.")]
+    [InlineData("Please include the diagnostic logs in the report.", "Please exclude the diagnostic logs in the report.")]
+    [InlineData("The maximum latency threshold is configured in settings.", "The minimum latency threshold is configured in settings.")]
+    public void HybridDeduplication_OppositeActions_ShouldNeverSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeFalse($"opposite actions '{ocr}' vs '{speech}' must never be suppressed as duplicates");
+    }
+
+    [Theory]
+    [InlineData("我们明天下午三点在台北车站见面。", "我们明天下午四点在台北车站见面。")]
+    [InlineData("请问明天的国际航班是早上八点起飞吗？", "请问明天的国际航班是早上九点起飞吗？")]
+    [InlineData("我们需要预订两个标准房间。", "我们需要预订三个标准房间。")]
+    [InlineData("我们今天下午在会议室讨论方案。", "我们明天下午在会议室讨论方案。")]
+    [InlineData("我们昨天已经提交了测试报告。", "我们今天已经提交了测试报告。")]
+    [InlineData("这次更新总共修复了十五个安全漏洞。", "这次更新总共修复了五十个安全漏洞。")]
+    [InlineData("请在星期三之前完成所有的代码审查。", "请在星期四之前完成所有的代码审查。")]
+    [InlineData("The flight departs at 8:00 AM from terminal two.", "The flight departs at 9:00 AM from terminal two.")]
+    [InlineData("The flight departs at 8:00 AM from terminal two.", "The flight departs at 8:00 PM from terminal two.")]
+    [InlineData("We need two more tickets for tonight's screening.", "We need three more tickets for tonight's screening.")]
+    [InlineData("Let's review the benchmark report this morning.", "Let's review the benchmark report this evening.")]
+    [InlineData("The release meeting is scheduled for Monday afternoon.", "The release meeting is scheduled for Tuesday afternoon.")]
+    [InlineData("We detected fifteen anomalies during the stress test.", "We detected fifty anomalies during the stress test.")]
+    public void HybridDeduplication_DifferentNumbersTimesAndQuantities_ShouldNeverSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeFalse($"different numbers/times '{ocr}' vs '{speech}' must never be suppressed");
+    }
+
+    [Theory]
+    [InlineData("我今天下午去北京参加技术会议。", "我今天下午不去北京参加技术会议。")]
+    [InlineData("请在离开办公室之前打开电脑电源。", "请在离开办公室之前不要打开电脑电源。")]
+    [InlineData("我们已经完成了数据库备份。", "我们没有完成数据库备份。")]
+    [InlineData("系统已经检测到异常网络流量。", "系统未检测到异常网络流量。")]
+    [InlineData("请把测试数据上传到公共服务器。", "请勿把测试数据上传到公共服务器。")]
+    [InlineData("在会议期间可以开启麦克风。", "在会议期间别开启麦克风。")]
+    [InlineData("这次升级对现有用户毫无影响。", "这次升级对现有用户有影响。")]
+    [InlineData("I can attend the security review meeting tomorrow.", "I cannot attend the security review meeting tomorrow.")]
+    [InlineData("I can attend the security review meeting tomorrow.", "I can't attend the security review meeting tomorrow.")]
+    [InlineData("Please open the window before leaving.", "Please don't open the window before leaving.")]
+    [InlineData("The backup service is running on the secondary node.", "The backup service isn't running on the secondary node.")]
+    [InlineData("We should deploy the hotfix with database migration.", "We should deploy the hotfix without database migration.")]
+    [InlineData("The client certificate is valid for this domain.", "The client certificate is invalid for this domain.")]
+    public void HybridDeduplication_NegationPolarityMismatch_ShouldNeverSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeFalse($"negation polarity mismatch '{ocr}' vs '{speech}' must never be suppressed");
+    }
+
+    [Theory]
+    [InlineData("请问去北京的火车是早上八点出发吗？", "请问去南京的火车是早上八点出发吗？")]
+    [InlineData("请问台北车站附近有什么推荐的餐厅吗？", "请问台中车站附近有什么推荐的餐厅吗？")]
+    [InlineData("这批货物今天晚上从上海港口出发。", "这批货物今天晚上从深圳港口出发。")]
+    [InlineData("小王今天下午在会议室做技术报告。", "小张今天下午在会议室做技术报告。")]
+    [InlineData("李明已经到达上海浦东国际机场。", "李华已经到达上海浦东国际机场。")]
+    [InlineData("陈医生刚刚完成了今天的手术。", "林医生刚刚完成了今天的手术。")]
+    [InlineData("请把这份材料交给赵经理审阅。", "请把这份材料交给黄经理审阅。")]
+    [InlineData("Dr. Smith arrived in London for the security conference.", "Dr. Jones arrived in London for the security conference.")]
+    [InlineData("Dr. Smith arrived in London for the security conference.", "Dr. Smith arrived in Boston for the security conference.")]
+    [InlineData("Professor Taylor will present the keynote speech today.", "Professor Miller will present the keynote speech today.")]
+    public void HybridDeduplication_DifferentPersonAndLocationNames_ShouldNeverSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeFalse($"different person/location names '{ocr}' vs '{speech}' must never be suppressed");
+    }
+
+    [Theory]
+    [InlineData("请在离开之前把所有的电源关掉。", "请在离开之前把所有的电源开掉。")]
+    [InlineData("这笔资金今天已经转入公司账户。", "这笔资金今天已经转出公司账户。")]
+    [InlineData("这是我们团队内部的测试文档。", "这是我们团队外部的测试文档。")]
+    [InlineData("请把音量调高一点以便大家听清楚。", "请把音量调低一点以便大家听清楚。")]
+    [InlineData("我们必须全部保留这些历史日志。", "我们必须只保留这些历史日志。")]
+    [InlineData("You must restart the computer after installing the driver.", "You may restart the computer after installing the driver.")]
+    [InlineData("All worker nodes passed the health check.", "Some worker nodes passed the health check.")]
+    [InlineData("Please turn left at the second intersection.", "Please turn right at the second intersection.")]
+    public void HybridDeduplication_SingleCriticalCharOrModalWordDifference_ShouldNeverSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeFalse($"single critical character/modal difference '{ocr}' vs '{speech}' must never be suppressed");
+    }
+
+    [Theory]
+    [InlineData("Welcome to the station.", "Welcome to the station")]
+    [InlineData("你好，欢迎大家参加今天的软件测试会议。", "你好 欢迎大家参加今天的软件测试会议")]
+    [InlineData("你好，欢迎大家参加今天的软件测试会议。", "你好 歡迎大家參加今天的軟件測試會議")]
+    [InlineData("请问明天的国际航班是早上八点起飞吗？", "請問,明天的國際航班是早上8點起飛嗎?")]
+    [InlineData("我们已经在本地服务器上完成了数据库备份。", "我們已經在本地服務器上完成了數據庫備份。")]
+    [InlineData("这个软体的网路连接非常稳定。", "這個軟件的網絡連接非常穩定。")]
+    [InlineData("请检查伺服器的资料库备份状态。", "請檢查服務器的數據庫備份狀態。")]
+    [InlineData("你好，欢迎大家参加今天的软件测试会议。", "你好 歡迎大家參加今天的軟件措施會議")]
+    [InlineData("今天下午的天气非常晴朗，适合出去散步。", "今天下午的天氣非常晴浪 適合出去散步")]
+    [InlineData("我们需要立即进行系统性能测试。", "我們需要立即進行系統性能側試")]
+    [InlineData("Always verify the security checksum before installing updates.", "Always verify the security checks some before installing updates.")]
+    [InlineData("The subtitle overlay renders smoothly on the primary monitor.", "The subtitle overlay renders smoothly on the primary monitors.")]
+    public void HybridDeduplication_TrueEquivalentSimplifiedTraditionalAndHomophone_ShouldSuppress(string ocr, string speech)
+    {
+        var now = DateTime.UtcNow;
+        bool suppressed = SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(
+            ocr, speech, now.AddMilliseconds(-500), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified);
+        suppressed.Should().BeTrue($"equivalent or 1-word ASR homophone '{ocr}' vs '{speech}' should be deduplicated");
+    }
+
+    [Fact]
+    public void HybridDeduplication_OcrRecencyWindow_ShouldRejectStaleOcrAndSuppressFreshOcr()
+    {
+        var now = DateTime.UtcNow;
+        const string ocr = "Welcome to the station.";
+        const string speech = "Welcome to the station.";
+
+        // Fresh OCR (seen 1.2s ago <= 4.5s window) -> suppress
+        SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(ocr, speech, now.AddMilliseconds(-1200), now)
+            .Should().BeTrue();
+
+        // Stale OCR (seen 5.0s ago > 4.5s window) -> must NOT suppress
+        SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(ocr, speech, now.AddMilliseconds(-5000), now)
+            .Should().BeFalse();
+
+        // Uninitialized OCR timestamp -> must NOT suppress
+        SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(ocr, speech, DateTime.MinValue, now)
+            .Should().BeFalse();
+    }
+
+    [Fact]
+    public void HybridDeduplication_FalsePositiveAndFalseNegativeRate_ShouldBeZeroOnAdversarialSuite()
+    {
+        var now = DateTime.UtcNow;
+        var distinctMeaningPairs = new (string Ocr, string Speech)[]
+        {
+            ("请在离开办公室之前打开所有的电脑电源。", "请在离开办公室之前关闭所有的电脑电源。"),
+            ("我们明天下午三点在台北车站见面。", "我们明天下午四点在台北车站见面。"),
+            ("我今天下午去北京参加技术会议。", "我今天下午不去北京参加技术会议。"),
+            ("请问去北京的火车是早上八点出发吗？", "请问去南京的火车是早上八点出发吗？"),
+            ("小王今天下午在会议室做技术报告。", "小张今天下午在会议室做技术报告。"),
+            ("Please turn on the main power switch before leaving.", "Please turn off the main power switch before leaving."),
+            ("The flight departs at 8:00 AM from terminal two.", "The flight departs at 9:00 AM from terminal two."),
+            ("I can attend the security review meeting tomorrow.", "I cannot attend the security review meeting tomorrow."),
+            ("Dr. Smith arrived in London for the security conference.", "Dr. Jones arrived in London for the security conference."),
+            ("Dr. Smith arrived in London for the security conference.", "Dr. Smith arrived in Boston for the security conference.")
+        };
+
+        var trueEquivalentPairs = new (string Ocr, string Speech)[]
+        {
+            ("Welcome to the station.", "welcome to the station"),
+            ("你好，欢迎大家参加今天的软件测试会议。", "你好 歡迎大家參加今天的軟件測試會議"),
+            ("请问明天的国际航班是早上八点起飞吗？", "請問,明天的國際航班是早上8點起飛嗎?"),
+            ("你好，欢迎大家参加今天的软件测试会议。", "你好 歡迎大家參加今天的軟件措施會議"),
+            ("今天下午的天气非常晴朗，适合出去散步。", "今天下午的天氣非常晴浪 適合出去散步"),
+            ("Always verify the security checksum before installing updates.", "Always verify the security checks some before installing updates.")
+        };
+
+        int legacyFp = 0;
+        int newFp = 0;
+        foreach (var (ocr, speech) in distinctMeaningPairs)
+        {
+            string c1 = SubtitleTextProcessor.CanonicalizeSubtitleForComparison(ScreenSub.Translation.LocalChineseConverter.ToSimplified(ocr));
+            string c2 = SubtitleTextProcessor.CanonicalizeSubtitleForComparison(ScreenSub.Translation.LocalChineseConverter.ToSimplified(speech));
+            if (SubtitleTextProcessor.CalculateSimilarity(c1, c2) >= 0.78) legacyFp++;
+            if (SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(ocr, speech, now.AddMilliseconds(-300), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified))
+                newFp++;
+        }
+
+        int newFn = 0;
+        foreach (var (ocr, speech) in trueEquivalentPairs)
+        {
+            if (!SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(ocr, speech, now.AddMilliseconds(-300), now, ScreenSub.Translation.LocalChineseConverter.ToSimplified))
+                newFn++;
+        }
+
+        legacyFp.Should().Be(distinctMeaningPairs.Length, "legacy >=0.78 similarity falsely suppressed all high-overlap opposite-meaning sentences");
+        newFp.Should().Be(0, "semantic-safe guard must achieve 0% false-positive suppression on opposite/different meaning pairs");
+        newFn.Should().Be(0, "semantic-safe guard must achieve 0% false-negative on true equivalent & 1-word homophone pairs");
+    }
 }
 

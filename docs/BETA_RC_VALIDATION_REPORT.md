@@ -18,20 +18,29 @@
 4. **Lệch đường dẫn & shadowing file hỏng trong `WhisperModelManager` / Race & CTS leak trong `SubtitleCoordinator`:**
    - Đồng bộ `%LocalAppData%\ScreenSubAI\Models\whisper\`, kiểm tra `IsValidModelFile` (`> 1 MB`), `JobCts` ownership + `RetireSessionCts` (PASS stress `25` chu kỳ Stop/Restart liên tiếp).
 
+5. **Lỗi P1 Hybrid Deduplication nguy cơ suppress nhầm câu trái nghĩa / khác thời gian / khác thực thể (`SubtitleCoordinator` + `SubtitleTextProcessor`):**
+   - Trước đây, `SubtitleCoordinator` so khớp `ocrCanon` và `speechCanon` chỉ bằng `.Contains(...)` hoặc `CalculateSimilarity >= 0.78`, đồng thời dùng chung `_lastTextSeenTime` với luồng Speech. Trên các câu dài có chung khung ngữ cảnh (`"请在离开办公室之前打开所有的电脑电源。"` vs `"请在离开办公室之前关闭所有的电脑电源。"`, similarity `88,2%`), câu trái nghĩa (`打开/关闭`), khác giờ (`三点/四点`), thêm/bớt phủ định (`去/不去`), khác tên riêng/địa danh (`北京/南京`, `Smith/Jones`) hoặc OCR cũ đã hết hạn vẫn bị chặn nhầm (`10/10 = 100%` False-Positive trên bộ 10 cặp đối kháng).
+   - Đã tách riêng `_lastOcrSeenTimeUtc` (giới hạn độ mới OCR `<= 4,5 s`) và cài đặt `SubtitleTextProcessor.ShouldSuppressHybridSpeechDuplicate(...)` / `AreSubtitlesSemanticallyEquivalent(...)` kết hợp **Hard Veto** cho số/thời gian/số lượng (`ExtractCanonicalNumbers`), cực tính phủ định (`CountNegationMarkers`), hình vị tương phản CJK/từ trái nghĩa EN và khoảng cách từ khác biệt. Kết quả: **False-Positive giảm từ `100%` xuống `0,0%` (`0/10`)**, **False-Negative giữ `0,0%` (`0/6`)** cho câu đồng nghĩa Giản/Phồn và lỗi đồng âm 1 từ ASR.
+6. **Cơ chế kiểm thử phần cứng minh bạch (`HardwareFactAttribute`):**
+   - Thay thế toàn bộ `10` chỗ `if (...) return;` âm thầm trong `RealWorldAudioAndConcurrencyTests.cs`, `LiveHardwareE2ETests.cs` và `WhisperAuditBenchmarkTests.cs` bằng `[HardwareFact(...)]` + `[Trait("Category", "HardwareE2E")]`. Khi thiếu Edge, Whisper model, Translation model hoặc thiết bị WASAPI, xUnit báo **`SKIPPED`** kèm lý do rõ ràng thay vì báo `PASS` giả; khi đủ điều kiện, test bắt buộc đi qua các `Should()` assertions.
+
 ---
 
 ## 2. Danh sách file cập nhật gần nhất
 
+- [SubtitleTextProcessor.cs](../src/ScreenSub.Core/Processing/SubtitleTextProcessor.cs) & [SubtitleCoordinator.cs](../src/ScreenSub.Desktop/Services/SubtitleCoordinator.cs) — thêm `_isOcrCurrentlyPresentOnScreen`, `_lastOcrSeenTimeUtc` (`<= 4,5 s`) và bộ lọc ngữ nghĩa an toàn `ShouldSuppressHybridSpeechDuplicate` / `AreSubtitlesSemanticallyEquivalent` (`0% FP / 0% FN`).
+- [HardwareFactAttribute.cs](../tests/IntegrationTests/HardwareFactAttribute.cs) — thuộc tính `[HardwareFact]` kế thừa `FactAttribute` đảm bảo không bao giờ báo `PASS` giả khi thiếu phần cứng/model.
+- [SubtitleTextProcessorTests.cs](../tests/UnitTests/SubtitleTextProcessorTests.cs) — bổ sung `77` unit test cases cho toàn bộ nhóm kiểm thử P1 Hybrid Deduplication Safety (tổng `161` Unit Tests).
 - [LocalModelManager.cs](../src/ScreenSub.Infrastructure/LocalModelManager.cs) — cập nhật chính xác `SizeBytes` và `Sha256Checksum` của `whisper-base-ggml` (`ggerganov/whisper.cpp`).
 - [WhisperModelManager.cs](../src/ScreenSub.Speech/Whisper/WhisperModelManager.cs) & [WhisperSpeechRecognitionService.cs](../src/ScreenSub.Speech/Whisper/WhisperSpeechRecognitionService.cs) — cô lập `ModelStorageDirectory`, `WithGreedySamplingStrategy(bestOf=1)`, `WithNoContext()`, adaptive `WithAudioContextSize(768)` cho đoạn VAD `<= 8s`.
 - [EnergyVoiceActivityDetector.cs](../src/ScreenSub.Audio/VAD/EnergyVoiceActivityDetector.cs) & [SpeechSegment.cs](../src/ScreenSub.Core/Models/SpeechSegment.cs) — sửa rollover `_speechStartTimeMs`/`_lastSpeechTimeMs` khi thoại vượt `MaxSpeechDurationMs`, thêm `CreatedAtUtc`.
 - [FrameChangeDetector.cs](../src/ScreenSub.Capture/FrameChangeDetector.cs) — thêm SHA-256 fast-path cho frame giống nhau byte-by-byte để tránh decode WIC thừa gây reset retry bound.
 - [LocalChineseConverter.cs](../src/ScreenSub.Translation/LocalChineseConverter.cs) — tích hợp thêm Win32 `LCMapStringEx` (`LCMAP_SIMPLIFIED_CHINESE` / `LCMAP_TRADITIONAL_CHINESE`) để chuyển đổi đầy đủ bộ chữ Hán Phồn ↔ Giản offline.
-- [ScreenSubAI_Setup.iss](../installer/ScreenSubAI_Setup.iss), [build_installer.ps1](../installer/build_installer.ps1), [ScreenSub.Desktop.csproj](../src/ScreenSub.Desktop/ScreenSub.Desktop.csproj) & [SubtitleCoordinator.cs](../src/ScreenSub.Desktop/Services/SubtitleCoordinator.cs) — nâng phiên bản lên `v1.0.0-beta.2` (không ghi đè `beta.1`), bổ sung `LastSpeechQueueWaitMs`, chuẩn hóa CJK + `CalculateSimilarity >= 0.78` cho Hybrid deduplication.
+- [ScreenSubAI_Setup.iss](../installer/ScreenSubAI_Setup.iss), [build_installer.ps1](../installer/build_installer.ps1) & [ScreenSub.Desktop.csproj](../src/ScreenSub.Desktop/ScreenSub.Desktop.csproj) — nâng phiên bản lên `v1.0.0-beta.2` (không ghi đè `beta.1`).
 - [LiveHardwareE2ETests.cs](../tests/IntegrationTests/LiveHardwareE2ETests.cs), [WhisperAuditBenchmarkTests.cs](../tests/IntegrationTests/WhisperAuditBenchmarkTests.cs), [RealWorldAudioAndConcurrencyTests.cs](../tests/IntegrationTests/RealWorldAudioAndConcurrencyTests.cs) & [FrameChangeAndRetrySafetyTests.cs](../tests/IntegrationTests/FrameChangeAndRetrySafetyTests.cs).
-- [MODEL_GUIDE.md](MODEL_GUIDE.md), [BETA_DESKTOP_QA_CHECKLIST.md](BETA_DESKTOP_QA_CHECKLIST.md) & [BETA_RC_VALIDATION_REPORT.md](BETA_RC_VALIDATION_REPORT.md).
+- [README.md](../README.md), [INSTALL.md](INSTALL.md), [CHANGELOG.md](CHANGELOG.md), [KNOWN_ISSUES.md](KNOWN_ISSUES.md), [MODEL_GUIDE.md](MODEL_GUIDE.md), [BETA_DESKTOP_QA_CHECKLIST.md](BETA_DESKTOP_QA_CHECKLIST.md) & [BETA_RC_VALIDATION_REPORT.md](BETA_RC_VALIDATION_REPORT.md).
 - Bộ cài phát hành song song trong `dist/`:
-  - **Bản mới (`v1.0.0-beta.2`):** `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50.16 MB` / `52.600.952 bytes`, SHA-256 `42BBE8FC62E6D2F1706FAE7B33A4B08C7D8FB2DEA9C0C47C50540A3E0D4ED4BC`).
+  - **Bản mới (`v1.0.0-beta.2`):** `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50.18 MB` / `52.619.098 bytes`, SHA-256 `826402D6FB8258F553A2DE4927C718181CABAF5FF4E7BD0E02A9A1B9823EDA5D`).
   - **Bản rollback (`v1.0.0-beta.1`):** `dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` (`50.17 MB` / `52.607.228 bytes`, SHA-256 `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`).
 
 ---
@@ -41,9 +50,9 @@
 ### A. Build & Toàn bộ Regression Suite (`Release`, chạy sau lần sửa cuối)
 | Bộ kiểm thử | Kết quả | Thời gian |
 |---|---|---:|
-| **Release Build (`ScreenSubAI.slnx`)** | **PASS (`0 Warning, 0 Error`)** | `4,11 s` |
-| **UnitTests** | **`84/84 PASSED`** (`0 Failed, 0 Skipped`) | `19 s` |
-| **IntegrationTests** (Real Workers + Live Edge + Real EN/ZH Neural Audio + Concurrency + Stress 25x) | **`78/78 PASSED`** (`0 Failed, 0 Skipped`) | `14 m 31 s` |
+| **Release Build (`ScreenSubAI.slnx`)** | **PASS (`0 Warning, 0 Error`)** | `4,20 s` |
+| **UnitTests** | **`161/161 PASSED`** (`0 Failed, 0 Skipped`) | `19 s` |
+| **IntegrationTests** (Real Workers + Live Edge + Real EN/ZH Neural Audio + Hybrid Semantic Safety & OcrFreshnessLifecycle + Concurrency + Stress 25x) | **`81/81 PASSED`** (`0 Failed, 0 Skipped`) | `15 m 20 s` |
 
 ### B. Thực nghiệm Whisper.net (`ggml-base.bin`) -> EnViT5 -> Overlay & Hybrid Mode (`LiveHardwareE2ETests`)
 - **Nguồn model:** `C:\Users\Tan\AppData\Local\ScreenSubAI\Models\whisper\ggml-base.bin` (`147,951,465 bytes`, SHA-256 `60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe`). `LocalModelManager.VerifyModelIntegrityAsync("whisper-base-ggml")` → **PASS (`Installed`)**.
@@ -96,11 +105,11 @@
 
 | # | Release Gate | Trạng thái | Chi tiết |
 |---:|---|:---:|---|
-| 1 | Installer `v1.0.0-beta.2` + Upgrade từ `beta.1` + Uninstall trên host | **PASS** | `beta.2` (`50.16 MB`, `42BBE8FC...`) giữ song song `beta.1` (`1F3A6AAAD...`); Upgrade & Uninstall `exit=0`, giữ `92->92` file Models |
-| 2 | Release Build + `84 Unit` + `78 Integration` | **PASS** | `0 Warning, 0 Error`; `84/84 UnitTests`, `78/78 IntegrationTests` |
+| 1 | Installer `v1.0.0-beta.2` + Upgrade từ `beta.1` + Uninstall trên host | **PASS** | `beta.2` (`50.18 MB`, `826402D6FB8258F553A2DE4927C718181CABAF5FF4E7BD0E02A9A1B9823EDA5D`) giữ song song `beta.1` (`1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`); Upgrade & Uninstall `exit=0`, giữ `92->92` file Models |
+| 2 | Release Build + `161 Unit` + `81 Integration` (`242` tổng) | **PASS** | `0 Warning, 0 Error`; `161/161 UnitTests`, `81/81 IntegrationTests` (`0 Skipped` trên phần cứng thật) |
 | 3 | Live Edge Window -> OCR -> EnViT5 -> Overlay E2E | **PASS** | Chạy thực tế trên `msedge.exe` + `SubtitleOverlayWindow` |
 | 4 | Hardware WASAPI Loopback + VAD | **PASS** | Thu loopback sạch từ `Speakers (Realtek(R) Audio)` (`MaxPeak = 0,1407`) |
-| 5 | Whisper (`ggml-base.bin`) EN + ZH (`zh-CN`/`zh-TW`) + Hybrid + Concurrency | **PASS** | EN `Whisper P50 = 671 ms` (`AvgWER = 8,57%`), ZH `Whisper P50 = 678 ms` (`SimpNormCER = 4,68%`, `LangAcc = 100%`), Concurrency `CacheHit = 0%`, Hybrid EN & ZH dedup `True` |
+| 5 | Whisper (`ggml-base.bin`) EN + ZH (`zh-CN`/`zh-TW`) + Semantic-Safe Hybrid + Concurrency | **PASS** | EN `Whisper P50 = 671 ms` (`AvgWER = 8,57%`), ZH `Whisper P50 = 678 ms` (`SimpNormCER = 4,68%`, `LangAcc = 100%`), Concurrency `CacheHit = 0%`, Hybrid Semantic Safety `0% FP / 0% FN` |
 | 6 | Clean Windows VM hoàn toàn sạch (không có Python/VC++) | **PENDING** | Máy dùng `Windows 11 Home` (không có Hyper-V/Sandbox/VM sẵn) |
 | 7 | Interactive Multi-Monitor / Đa DPI / Borderless Game / Hotkey `Ctrl+Alt+Q` / Strict Offline vật lý | **PENDING** | Cần test tương tác trực tiếp đa màn hình, scale `125%–200%`, game fullscreen & rút mạng vật lý |
 | 8 | Soak Test liên tục `60` phút (`0/15/30/45/60m`) | **PENDING** | Mới chạy soak ngắn (`75,3 s`); chưa chạy đủ 60 phút nên không đánh dấu PASS |
@@ -110,5 +119,5 @@
 
 ## 5. Kết luận: **`CONDITIONAL` (Controlled Beta `v1.0.0-beta.2` Ready)**
 
-- Toàn bộ pipeline **Screen OCR**, **Audio Realtime (EN & ZH Giản thể/Phồn thể)** và **Hybrid Mode (cùng chạy đồng thời OCR + Whisper + Translation trên CPU)** đã được kiểm chứng end-to-end trên phần cứng thật (`84/84 Unit`, `78/78 Integration`, `0` crash) và đóng gói thành **`ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe`** (bảo toàn bản `beta.1` để rollback).
+- Toàn bộ pipeline **Screen OCR**, **Audio Realtime (EN & ZH Giản thể/Phồn thể)** và **Hybrid Mode (cùng chạy đồng thời OCR + Whisper + Translation trên CPU với bộ lọc trùng ngữ nghĩa an toàn `0% FP / 0% FN`)** đã được kiểm chứng end-to-end trên phần cứng thật (`161/161 Unit`, `81/81 Integration`, `0` crash) và đóng gói thành **`ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe`** (bảo toàn bản `beta.1` để rollback).
 - Trước khi mở rộng lên **Wide Beta**, cần hoàn tất các cổng `PENDING` phụ thuộc môi trường/thời lượng: **Clean Windows VM**, **Multi-Monitor / DPI / Borderless Fullscreen / Hotkey tương tác vật lý**, và **Soak Test đủ 60 phút (`0/15/30/45/60m`)**.

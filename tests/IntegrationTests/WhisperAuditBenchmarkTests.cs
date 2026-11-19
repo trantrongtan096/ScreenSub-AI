@@ -216,17 +216,16 @@ public class WhisperAuditBenchmarkTests
         return (float)Math.Sqrt(sum / n);
     }
 
-    [Fact]
+    [HardwareFact(requiresWhisperBase: true, requiresTranslationModel: true, requiresAudioOutput: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task Audit_All7Stages_SpeechOnsetToOverlay_EndToEndBreakdown_AutoAndEnglish()
     {
-        if (!WhisperModelManager.IsModelAvailable("base") || !LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk())
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist");
+        LocalNeuralTranslationEngine.IsDefaultModelInstalledOnDisk().Should().BeTrue("offline translation models must exist");
+        using (var devProbe = new WasapiAudioCaptureService())
         {
-            return;
+            devProbe.GetOutputDevices().Count.Should().BeGreaterThan(0, "active WASAPI output device is required");
         }
-
-        using var devProbe = new WasapiAudioCaptureService();
-        if (devProbe.GetOutputDevices().Count == 0) return;
-        devProbe.Dispose();
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"ws_7stage_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);
@@ -438,10 +437,11 @@ public class WhisperAuditBenchmarkTests
         }
     }
 
-    [Fact]
+    [HardwareFact(requiresWhisperBase: true)]
+    [Trait("Category", "HardwareE2E")]
     public async Task QualityBenchmark_52Utterances_OptimizedWhisperService_CleanVsNoisy()
     {
-        if (!WhisperModelManager.IsModelAvailable("base")) return;
+        WhisperModelManager.IsModelAvailable("base").Should().BeTrue("ggml-base.bin must exist");
 
         string tempDir = Path.Combine(Path.GetTempPath(), $"ws_q52_{Guid.NewGuid():N}");
         Directory.CreateDirectory(tempDir);

@@ -643,4 +643,562 @@ public static class SubtitleTextProcessor
 
         return d[n, m];
     }
+
+    // =========================================================================
+    // Hybrid OCR + Speech Semantic Deduplication Safety
+    // =========================================================================
+
+    public const double DefaultMaxHybridOcrFreshnessMs = 4500.0;
+
+    private static readonly HashSet<string> EnglishNegations = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "not", "no", "never", "none", "nobody", "nothing", "neither", "nor", "nowhere", "without",
+        "cannot", "can't", "cant", "won't", "wont", "don't", "dont", "doesn't", "doesnt",
+        "didn't", "didnt", "isn't", "isnt", "aren't", "arent", "wasn't", "wasnt", "weren't", "werent",
+        "shouldn't", "shouldnt", "wouldn't", "wouldnt", "couldn't", "couldnt", "mustn't", "mustnt",
+        "haven't", "havent", "hasn't", "hasnt", "hadn't", "hadnt"
+    };
+
+    private static readonly Dictionary<string, long> EnglishNumberWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["zero"] = 0, ["one"] = 1, ["two"] = 2, ["three"] = 3, ["four"] = 4, ["five"] = 5,
+        ["six"] = 6, ["seven"] = 7, ["eight"] = 8, ["nine"] = 9, ["ten"] = 10,
+        ["eleven"] = 11, ["twelve"] = 12, ["thirteen"] = 13, ["fourteen"] = 14, ["fifteen"] = 15,
+        ["sixteen"] = 16, ["seventeen"] = 17, ["eighteen"] = 18, ["nineteen"] = 19, ["twenty"] = 20,
+        ["thirty"] = 30, ["forty"] = 40, ["fifty"] = 50, ["sixty"] = 60, ["seventy"] = 70,
+        ["eighty"] = 80, ["ninety"] = 90, ["hundred"] = 100, ["thousand"] = 1000, ["million"] = 1000000,
+        ["first"] = 1, ["second"] = 2, ["third"] = 3, ["fourth"] = 4, ["fifth"] = 5
+    };
+
+    private static readonly (string A, string B)[] EnglishAntonymPairs =
+    [
+        ("open", "close"), ("opened", "closed"), ("opening", "closing"),
+        ("on", "off"), ("start", "stop"), ("started", "stopped"),
+        ("begin", "end"), ("enable", "disable"), ("enabled", "disabled"),
+        ("lock", "unlock"), ("locked", "unlocked"), ("connect", "disconnect"),
+        ("upload", "download"), ("login", "logout"), ("in", "out"),
+        ("inside", "outside"), ("up", "down"), ("left", "right"),
+        ("before", "after"), ("enter", "exit"), ("enter", "leave"),
+        ("buy", "sell"), ("accept", "reject"), ("allow", "deny"),
+        ("increase", "decrease"), ("high", "low"), ("fast", "slow"),
+        ("true", "false"), ("yes", "no"), ("east", "west"), ("north", "south"),
+        ("morning", "evening"), ("morning", "afternoon"), ("morning", "night"),
+        ("afternoon", "evening"), ("today", "tomorrow"), ("today", "yesterday"),
+        ("tomorrow", "yesterday"), ("am", "pm"), ("arrive", "depart"), ("arrived", "departed"),
+        ("encrypt", "decrypt"), ("encrypted", "decrypted"),
+        ("import", "export"), ("imported", "exported"),
+        ("include", "exclude"), ("included", "excluded"),
+        ("internal", "external"), ("maximum", "minimum"), ("max", "min"),
+        ("push", "pull"), ("send", "receive"), ("sent", "received"),
+        ("public", "private"), ("online", "offline"),
+        ("success", "failure"), ("succeed", "fail"), ("succeeded", "failed"),
+        ("pass", "fail"), ("passed", "failed"),
+        ("approve", "reject"), ("approved", "rejected"),
+        ("add", "remove"), ("added", "removed"), ("add", "delete"),
+        ("create", "delete"), ("created", "deleted"),
+        ("show", "hide"), ("shown", "hidden"),
+        ("first", "last"), ("early", "late"),
+        ("win", "lose"), ("won", "lost"),
+        ("safe", "unsafe"), ("safe", "dangerous"),
+        ("above", "below"), ("over", "under"), ("with", "without"),
+        ("can", "cannot"), ("will", "wont"), ("do", "dont"), ("did", "didnt"), ("is", "isnt"), ("are", "arent")
+    ];
+
+    private static readonly HashSet<string> EnglishModalAndDirectionalContrastWords = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "must", "may", "might", "can", "could", "should", "shall", "will", "would",
+        "before", "after", "until", "unless", "with", "without", "if", "although", "though",
+        "all", "some", "any", "none", "every", "few", "many", "most", "both", "either", "neither",
+        "always", "never", "often", "rarely", "seldom", "sometimes",
+        "up", "down", "in", "out", "on", "off", "left", "right", "east", "west", "north", "south",
+        "am", "pm", "mon", "tue", "wed", "thu", "fri", "sat", "sun",
+        "monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday",
+        "january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december",
+        "mr", "mrs", "ms", "dr", "prof", "sir", "madam"
+    };
+
+    private static readonly HashSet<char> ProtectedCjkSemanticAndEntityChars =
+    [
+        // Action / Polarity / State / Direction / Time / Quantity / Modal contrasts
+        '开', '关', '启', '闭', '进', '出', '入', '离', '升', '降', '增', '减', '加', '删',
+        '买', '卖', '收', '发', '推', '拉', '存', '取', '借', '还', '赢', '输', '成', '败',
+        '批', '拒', '允', '禁', '是', '非', '有', '无', '多', '少', '大', '小', '高', '低',
+        '快', '慢', '早', '晚', '午', '今', '明', '昨', '前', '后', '左', '右', '东', '西',
+        '南', '北', '中', '上', '下', '内', '外', '男', '女', '公', '私', '正', '反', '真',
+        '假', '对', '错', '好', '坏', '新', '旧', '生', '死', '来', '去',
+        '只', '全', '都', '必', '须', '可', '能', '会', '该', '已', '未', '曾', '正', '将', '刚', '才',
+        '起', '停', '始', '终', '长', '短', '宽', '窄', '深', '浅', '重', '轻', '强', '弱', '明', '暗',
+        '冷', '热', '干', '湿', '空', '满', '真', '伪', '善', '恶', '美', '丑', '贵', '贱', '富', '贫',
+        '动', '静', '松', '紧', '软', '硬', '粗', '细', '厚', '薄', '远', '近', '古', '今', '留', '走',
+        '装', '卸', '读', '写', '问', '答', '給', '给', '拿', '放', '穿', '脱', '睡', '醒', '哭', '笑',
+        // Geography / Cities / Locations
+        '京', '沪', '津', '渝', '穗', '蓉', '汉', '宁', '沈', '杭', '深', '广', '川', '蜀',
+        '粤', '鲁', '苏', '浙', '皖', '闽', '赣', '豫', '鄂', '湘', '琼', '黔', '滇', '陕',
+        '甘', '青', '台', '港', '澳', '海', '州', '湾', '岛', '美', '英', '法', '德', '日',
+        '韩', '俄', '越', '泰', '印', '欧', '亚', '厦', '福', '泉', '温', '苏', '锡', '常',
+        // Common Surnames
+        '王', '李', '张', '刘', '陈', '杨', '赵', '黄', '周', '吴', '徐', '孙', '胡', '朱',
+        '高', '林', '何', '郭', '马', '罗', '梁', '宋', '郑', '谢', '唐', '冯', '董', '萧',
+        '曹', '袁', '邓', '许', '傅', '彭', '吕', '卢', '蒋', '蔡', '贾', '丁', '魏', '薛',
+        '叶', '阎', '潘', '杜', '戴', '夏', '钟', '汪', '田', '任', '姜', '范', '方', '石',
+        '姚', '谭', '廖', '邹', '熊', '金', '陆', '郝', '孔', '白', '崔', '康', '毛', '邱',
+        '秦', '江', '史', '顾', '侯', '邵', '孟', '龙', '段', '雷', '钱', '汤', '尹', '黎'
+    ];
+
+    private static readonly HashSet<char> CjkNameContextMarkers =
+    [
+        '小', '老', '阿', '总', '师', '生', '医', '博', '教', '授', '经', '理', '长', '员', '哥', '姐', '叔', '姨', '董', '局', '主', '任'
+    ];
+
+    /// <summary>
+    /// Evaluates whether a recognized speech segment in Hybrid mode should be suppressed because
+    /// an equivalent OCR subtitle is already actively displayed on screen within the freshness window.
+    /// </summary>
+    public static bool ShouldSuppressHybridSpeechDuplicate(
+        string? ocrText,
+        string? speechText,
+        DateTime lastOcrSeenUtc,
+        DateTime nowUtc,
+        Func<string, string>? cjkSimplifiedNormalizer = null,
+        double maxOcrFreshnessMs = DefaultMaxHybridOcrFreshnessMs)
+    {
+        if (string.IsNullOrWhiteSpace(ocrText) || string.IsNullOrWhiteSpace(speechText))
+        {
+            return false;
+        }
+
+        if (lastOcrSeenUtc == DateTime.MinValue ||
+            (nowUtc - lastOcrSeenUtc).TotalMilliseconds > maxOcrFreshnessMs)
+        {
+            return false;
+        }
+
+        return AreSubtitlesSemanticallyEquivalent(ocrText, speechText, cjkSimplifiedNormalizer);
+    }
+
+    /// <summary>
+    /// Determines whether two subtitles (e.g. Screen OCR and Whisper ASR) represent the same semantic utterance,
+    /// tolerating CJK Simplified/Traditional script differences, punctuation/spacing, and minor 1-word ASR homophones,
+    /// while strictly rejecting sentences that differ in negation polarity, numbers/times/quantities, actions/directions,
+    /// or person/place names.
+    /// </summary>
+    public static bool AreSubtitlesSemanticallyEquivalent(
+        string? ocrText,
+        string? speechText,
+        Func<string, string>? cjkSimplifiedNormalizer = null)
+    {
+        if (string.IsNullOrWhiteSpace(ocrText) || string.IsNullOrWhiteSpace(speechText))
+        {
+            return false;
+        }
+
+        string ocrSimp = NormalizeCrossStraitTerms(cjkSimplifiedNormalizer != null ? cjkSimplifiedNormalizer(ocrText.Trim()) : ocrText.Trim());
+        string speechSimp = NormalizeCrossStraitTerms(cjkSimplifiedNormalizer != null ? cjkSimplifiedNormalizer(speechText.Trim()) : speechText.Trim());
+
+        string ocrCanon = CanonicalizeSubtitleForComparison(ocrSimp);
+        string speechCanon = CanonicalizeSubtitleForComparison(speechSimp);
+
+        if (string.IsNullOrEmpty(ocrCanon) || string.IsNullOrEmpty(speechCanon))
+        {
+            return false;
+        }
+
+        // 1. Hard Veto: Numeric / Time / Quantity slots must match (e.g. 三点 vs 四点, 3 vs 4, 8:00 vs 9:00)
+        var ocrNumbers = ExtractCanonicalNumbers(ocrSimp);
+        var speechNumbers = ExtractCanonicalNumbers(speechSimp);
+        if (!ocrNumbers.SequenceEqual(speechNumbers))
+        {
+            return false;
+        }
+
+        // 2. Hard Veto: Negation polarity must match (e.g. 打开 vs 不要打开, can vs cannot/can't)
+        if (CountNegationMarkers(ocrSimp) != CountNegationMarkers(speechSimp))
+        {
+            return false;
+        }
+
+        // 3. Exact canonical or digit-canonical match
+        string ocrDigitCanon = NormalizeChineseNumeralsInline(ocrCanon);
+        string speechDigitCanon = NormalizeChineseNumeralsInline(speechCanon);
+        if (string.Equals(ocrDigitCanon, speechDigitCanon, StringComparison.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+
+        bool isCjk = ocrDigitCanon.Any(IsCjkCharacter) || speechDigitCanon.Any(IsCjkCharacter);
+        if (isCjk)
+        {
+            return EvaluateCjkSemanticEquivalence(ocrDigitCanon, speechDigitCanon);
+        }
+
+        return EvaluateEnglishSemanticEquivalence(ocrText, speechText, ocrDigitCanon, speechDigitCanon);
+    }
+
+    private static string NormalizeCrossStraitTerms(string text)
+    {
+        return text
+            .Replace("這一個", "這個", StringComparison.Ordinal)
+            .Replace("这一个", "这个", StringComparison.Ordinal)
+            .Replace("那一個", "那個", StringComparison.Ordinal)
+            .Replace("那一个", "那个", StringComparison.Ordinal)
+            .Replace("网路", "网络", StringComparison.Ordinal)
+            .Replace("软体", "软件", StringComparison.Ordinal)
+            .Replace("资料库", "数据库", StringComparison.Ordinal)
+            .Replace("伺服器", "服务器", StringComparison.Ordinal);
+    }
+
+    public static string CanonicalizeSubtitleForComparison(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+        var sb = new System.Text.StringBuilder(text.Length);
+        bool prevWasSpace = false;
+        bool prevWasCjk = false;
+
+        foreach (char c in text.Trim())
+        {
+            if (char.IsPunctuation(c) || c is '。' or '！' or '？' or '，' or '；' or '：' or '、' or '“' or '”' or '‘' or '’' or '～' or '·')
+            {
+                continue;
+            }
+
+            if (char.IsWhiteSpace(c))
+            {
+                if (!prevWasSpace && !prevWasCjk && sb.Length > 0)
+                {
+                    sb.Append(' ');
+                    prevWasSpace = true;
+                }
+                continue;
+            }
+
+            bool isCjk = c >= 0x4E00 && c <= 0x9FFF;
+            if (isCjk && prevWasSpace && sb.Length > 0 && sb[^1] == ' ')
+            {
+                sb.Length--;
+            }
+
+            sb.Append(char.ToLowerInvariant(c));
+            prevWasSpace = false;
+            prevWasCjk = isCjk;
+        }
+
+        return sb.ToString().Trim();
+    }
+
+    private static string NormalizeChineseNumeralsInline(string s)
+    {
+        var sb = new System.Text.StringBuilder(s.Length);
+        foreach (char c in s)
+        {
+            sb.Append(c switch
+            {
+                '零' or '〇' => '0',
+                '一' or '壹' => '1',
+                '二' or '两' or '贰' or '兩' => '2',
+                '三' or '叁' or '參' => '3',
+                '四' or '肆' => '4',
+                '五' or '伍' => '5',
+                '六' or '陆' or '陸' => '6',
+                '七' or '柒' => '7',
+                '八' or '捌' => '8',
+                '九' or '玖' => '9',
+                _ => c
+            });
+        }
+        return sb.ToString();
+    }
+
+    private static List<long> ExtractCanonicalNumbers(string text)
+    {
+        var result = new List<long>();
+        int i = 0;
+        while (i < text.Length)
+        {
+            char c = text[i];
+            if (char.IsDigit(c))
+            {
+                long val = 0;
+                while (i < text.Length && char.IsDigit(text[i]))
+                {
+                    val = val * 10 + (text[i] - '0');
+                    i++;
+                }
+                result.Add(val);
+                continue;
+            }
+
+            if (TryMapCjkNumberChar(c, out int cjkDigit))
+            {
+                long val = 0;
+                long current = 0;
+                bool any = false;
+                while (i < text.Length && TryMapCjkNumberChar(text[i], out int d))
+                {
+                    any = true;
+                    if (d >= 10)
+                    {
+                        if (current == 0) current = 1;
+                        val += current * d;
+                        current = 0;
+                    }
+                    else
+                    {
+                        current = current * 10 + d;
+                    }
+                    i++;
+                }
+                if (any)
+                {
+                    result.Add(val + current);
+                }
+                continue;
+            }
+
+            if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'))
+            {
+                int start = i;
+                while (i < text.Length && ((text[i] >= 'a' && text[i] <= 'z') || (text[i] >= 'A' && text[i] <= 'Z')))
+                {
+                    i++;
+                }
+                string word = text.Substring(start, i - start);
+                if (EnglishNumberWords.TryGetValue(word, out long numVal))
+                {
+                    result.Add(numVal);
+                }
+                continue;
+            }
+
+            i++;
+        }
+
+        return result;
+    }
+
+    private static bool TryMapCjkNumberChar(char c, out int value)
+    {
+        value = c switch
+        {
+            '零' or '〇' => 0,
+            '一' or '壹' => 1,
+            '二' or '两' or '兩' or '贰' => 2,
+            '三' or '叁' => 3,
+            '四' or '肆' => 4,
+            '五' or '伍' => 5,
+            '六' or '陆' or '陸' => 6,
+            '七' or '柒' => 7,
+            '八' or '捌' => 8,
+            '九' or '玖' => 9,
+            '十' or '拾' => 10,
+            '百' or '佰' => 100,
+            '千' or '仟' => 1000,
+            '万' or '萬' => 10000,
+            _ => -1
+        };
+        return value >= 0;
+    }
+
+    private static int CountNegationMarkers(string text)
+    {
+        int count = 0;
+
+        // 1. CJK negations (normalize '没有' / '毫无' as single negation)
+        string cjkScan = text
+            .Replace("没有", "没", StringComparison.Ordinal)
+            .Replace("沒有", "没", StringComparison.Ordinal)
+            .Replace("毫无", "无", StringComparison.Ordinal)
+            .Replace("毫無", "无", StringComparison.Ordinal);
+
+        foreach (char c in cjkScan)
+        {
+            if (c is '不' or '没' or '沒' or '未' or '别' or '別' or '勿' or '非' or '莫' or '毋' or '甭' or '无' or '無')
+            {
+                count++;
+            }
+        }
+
+        // 2. English word-level negations (including contractions like don't, can't, won't)
+        var matches = Regex.Matches(text, @"[a-zA-Z]+(?:'[a-zA-Z]+)?");
+        foreach (Match m in matches)
+        {
+            if (EnglishNegations.Contains(m.Value))
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static bool EvaluateCjkSemanticEquivalence(string a, string b)
+    {
+        int minLen = Math.Min(a.Length, b.Length);
+        int maxLen = Math.Max(a.Length, b.Length);
+        if (minLen == 0) return false;
+
+        // Substring containment only if the shorter clause covers >= 75% of the full subtitle (and >= 6 chars)
+        if (minLen >= 6 && (double)minLen / maxLen >= 0.75 && (a.Contains(b, StringComparison.Ordinal) || b.Contains(a, StringComparison.Ordinal)))
+        {
+            return true;
+        }
+
+        // Isolate differing core span after stripping shared prefix and shared suffix
+        int prefix = 0;
+        while (prefix < minLen && a[prefix] == b[prefix]) prefix++;
+
+        int suffix = 0;
+        while (suffix < (minLen - prefix) && a[a.Length - 1 - suffix] == b[b.Length - 1 - suffix]) suffix++;
+
+        string diffA = a.Substring(prefix, a.Length - prefix - suffix);
+        string diffB = b.Substring(prefix, b.Length - prefix - suffix);
+
+        // Reject if any differing character is a protected semantic contrast (action, direction, time, place, surname)
+        foreach (char c in diffA)
+        {
+            if (ProtectedCjkSemanticAndEntityChars.Contains(c)) return false;
+        }
+        foreach (char c in diffB)
+        {
+            if (ProtectedCjkSemanticAndEntityChars.Contains(c)) return false;
+        }
+
+        // Reject if one side inserts or deletes a single critical modifier while the other has nothing (e.g. "我同意" vs "我不同意", "全部删除" vs "只删除")
+        if ((diffA.Length == 0 && diffB.Length > 0) || (diffB.Length == 0 && diffA.Length > 0))
+        {
+            string inserted = diffA.Length > 0 ? diffA : diffB;
+            if (inserted.Length <= 2 && inserted.Any(c => ProtectedCjkSemanticAndEntityChars.Contains(c)))
+            {
+                return false;
+            }
+        }
+
+        // Reject if the differing span is immediately adjacent to a person name/title marker (e.g. 小王 vs 小张, 李明 vs 李华, 陈医生 vs 林医生)
+        if (prefix > 0 && CjkNameContextMarkers.Contains(a[prefix - 1]))
+        {
+            return false;
+        }
+        if (suffix > 0 && CjkNameContextMarkers.Contains(a[a.Length - suffix]))
+        {
+            return false;
+        }
+
+        // Allow minor 1-2 char ASR homophone only on sufficiently long utterances (>= 8 chars, similarity >= 0.82, edit distance <= 2)
+        int dist = LevenshteinDistance(a, b);
+        double sim = 1.0 - ((double)dist / maxLen);
+        return maxLen >= 8 && dist <= 2 && sim >= 0.82;
+    }
+
+    private static bool EvaluateEnglishSemanticEquivalence(string rawOcr, string rawSpeech, string canonOcr, string canonSpeech)
+    {
+        // 1. Check explicit English antonym pairs
+        var ocrWordsSet = new HashSet<string>(canonOcr.Split(' ', StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+        var speechWordsSet = new HashSet<string>(canonSpeech.Split(' ', StringSplitOptions.RemoveEmptyEntries), StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (wA, wB) in EnglishAntonymPairs)
+        {
+            if ((ocrWordsSet.Contains(wA) && speechWordsSet.Contains(wB) && !ocrWordsSet.Contains(wB)) ||
+                (ocrWordsSet.Contains(wB) && speechWordsSet.Contains(wA) && !ocrWordsSet.Contains(wA)))
+            {
+                return false;
+            }
+        }
+
+        // 2. Coalesce 1-word compound splits (e.g. "checks some" <-> "checksum", "post gress" <-> "postgres")
+        var wordsA = CoalesceCompoundSplits(canonOcr.Split(' ', StringSplitOptions.RemoveEmptyEntries), canonSpeech.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var wordsB = CoalesceCompoundSplits(canonSpeech.Split(' ', StringSplitOptions.RemoveEmptyEntries), wordsA);
+
+        // Strip shared leading and trailing words
+        int minW = Math.Min(wordsA.Count, wordsB.Count);
+        int pref = 0;
+        while (pref < minW && string.Equals(wordsA[pref], wordsB[pref], StringComparison.OrdinalIgnoreCase)) pref++;
+
+        int suff = 0;
+        while (suff < (minW - pref) && string.Equals(wordsA[wordsA.Count - 1 - suff], wordsB[wordsB.Count - 1 - suff], StringComparison.OrdinalIgnoreCase)) suff++;
+
+        var diffWordsA = wordsA.Skip(pref).Take(wordsA.Count - pref - suff).ToList();
+        var diffWordsB = wordsB.Skip(pref).Take(wordsB.Count - pref - suff).ToList();
+
+        if (diffWordsA.Count == 0 && diffWordsB.Count == 0)
+        {
+            return true;
+        }
+
+        // If one side has extra words and the other does not, only allow if it's a long clause containment (>= 75% words) without negation
+        if (diffWordsA.Count == 0 || diffWordsB.Count == 0)
+        {
+            int maxW = Math.Max(wordsA.Count, wordsB.Count);
+            return minW >= 4 && (double)minW / maxW >= 0.80;
+        }
+
+        // If differing word counts don't match after compound coalescing, or more than 2 words differ, reject
+        if (diffWordsA.Count != diffWordsB.Count || diffWordsA.Count > 2)
+        {
+            return false;
+        }
+
+        for (int i = 0; i < diffWordsA.Count; i++)
+        {
+            string wa = diffWordsA[i];
+            string wb = diffWordsB[i];
+
+            // Reject modal/directional/quantifier/temporal contrast words (must vs may, all vs some, monday vs tuesday, etc.)
+            if (EnglishModalAndDirectionalContrastWords.Contains(wa) || EnglishModalAndDirectionalContrastWords.Contains(wb))
+            {
+                return false;
+            }
+
+            // Reject negative/reversive prefixes (lock vs unlock, enable vs disable, valid vs invalid, etc.)
+            if (IsReversivePrefixPair(wa, wb) || IsReversivePrefixPair(wb, wa))
+            {
+                return false;
+            }
+
+            // Require each substituted word to be phonetically/orthographically close (>= 0.65 char similarity)
+            // This allows "checksum" vs "checkssome" (0.80), "station" vs "stations" (0.88),
+            // while rejecting "smith" vs "jones" (0.00), "london" vs "boston" (0.33), "open" vs "close" (0.20).
+            if (CalculateSimilarity(wa, wb) < 0.65)
+            {
+                return false;
+            }
+        }
+
+        return CalculateSimilarity(canonOcr, canonSpeech) >= 0.82;
+    }
+
+    private static List<string> CoalesceCompoundSplits(IReadOnlyList<string> source, IReadOnlyList<string> reference)
+    {
+        var result = new List<string>(source.Count);
+        int i = 0;
+        while (i < source.Count)
+        {
+            if (i + 1 < source.Count)
+            {
+                string joined = source[i] + source[i + 1];
+                if (reference.Any(r => r.Length >= 5 && CalculateSimilarity(joined, r) >= 0.65))
+                {
+                    result.Add(joined);
+                    i += 2;
+                    continue;
+                }
+            }
+            result.Add(source[i]);
+            i++;
+        }
+        return result;
+    }
+
+    private static bool IsReversivePrefixPair(string shorter, string longer)
+    {
+        if (longer.Length <= shorter.Length + 1) return false;
+        string[] prefixes = ["un", "dis", "in", "im", "il", "ir", "non", "de", "mis"];
+        foreach (string p in prefixes)
+        {
+            if (longer.StartsWith(p, StringComparison.OrdinalIgnoreCase) &&
+                CalculateSimilarity(longer.Substring(p.Length), shorter) >= 0.80)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -35,8 +35,17 @@ Tài liệu này ghi nhận minh bạch các đặc tính, hạn chế kỹ thu�
 
 ---
 
-## 3. Worker Lifecycle & Tường Lửa
+## 3. Worker Lifecycle, Tường Lửa & Giới Hạn Bản Controlled Beta (`v1.0.0-beta.2`)
 
 ### 3.1. Cảnh Báo Windows Defender / Tường Lửa Lần Đầu Khởi Động
 - Khi khởi động lần đầu, Windows có thể hiển thị hộp thoại hỏi quyền mạng cho tiến trình Python worker. Bạn có thể nhấn **Cancel** hoặc **Allow** đều được, vì các worker OCR và Offline Translation hoạt động hoàn toàn nội bộ qua stdin/stdout (không lắng nghe bất kỳ cổng mạng mở nào ra ngoài).
+
+### 3.2. Nhận Diện OCR Chữ Hán Phồn Thể (`zh-Hant`) Nhiều Nét
+- Mô hình `PP-OCRv4` mặc định hiện có 51 ký tự Phồn thể ngoài từ điển (OOV) trên bộ ảnh thử nghiệm Phồn thể chuyên sâu. Khi xem video có phụ đề Phồn thể kèm giọng đọc tiếng Trung, khuyến nghị bật **Hybrid Mode (`SourceLanguage = Chinese`)** để Whisper (`ggml-base.bin`) hỗ trợ nhận diện giọng nói khi phụ đề màn hình thiếu nét.
+
+### 3.3. Độ Trễ Whisper Ở Chế Độ Tự Động Nhận Diện Ngôn Ngữ (`Auto`)
+- Trên CPU tầm trung (`i5-10300H`), khi cả `SourceLanguage` và `SpeechLanguage` đều để `Auto`, Whisper cần chạy thêm lượt nhận diện ngôn ngữ (`P50 ~ 2,04 s`). Khuyến nghị chọn trực tiếp `SourceLanguage = English` hoặc `Chinese` khi đã biết ngôn ngữ của video để giảm độ trễ Whisper xuống **`~670 ms` (P50)**.
+
+### 3.4. Các Cổng Nghiệm Thu Đang Chờ Trước Khi Phát Hành Wide Beta
+- Bản `v1.0.0-beta.2` hiện ở trạng thái **Controlled Beta**. Ba hạng mục nghiệm thu còn ở trạng thái `PENDING`: (1) kiểm thử bộ cài trên máy ảo Windows 10/11 hoàn toàn sạch chưa có Python/VC++, (2) kiểm thử tương tác đa màn hình khác mức DPI và game Borderless Fullscreen, (3) chạy Soak Test liên tục đủ 60 phút (`0/15/30/45/60m`).
 

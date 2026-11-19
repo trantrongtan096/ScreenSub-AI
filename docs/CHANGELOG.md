@@ -4,33 +4,24 @@ Tất cả các thay đổi đáng chú ý của dự án **ScreenSub AI** qua t
 
 ---
 
-## [1.0.0-beta.2] - 2026-11-10
+## [1.0.0-beta.2] - 2026-11-18
 
-### Tính Năng Mới & Đột Phá Kỹ Thuật
-- **Quick Translate Mode (Dịch tức thì trên Video):**
-  - Người dùng bấm `Ctrl + Alt + Q` từ Chrome, Edge, YouTube, VLC... và quét chọn vùng phụ đề:
-    - Ứng dụng **tự động lưu vùng, tự động căn vị trí Overlay ngay cạnh video và tự động bắt đầu dịch ngay lập tức**!
-    - **Không cần mở lại Dashboard hoặc nhấn Start lần thứ hai**.
-  - Xử lý mượt mà khi hủy chọn vùng (`ESC`): tiếp tục phiên dịch hiện tại mà không làm ngắt quãng trải nghiệm.
-- **Windows Background Operation & System Tray:**
-  - Hỗ trợ ứng dụng chạy nền hoàn toàn dưới khay hệ thống (System Tray).
-  - Thu nhỏ xuống khay hệ thống khi đóng cửa sổ Dashboard (`X`). Phím tắt toàn cục và Overlay tiếp tục hoạt động.
-  - Menu chuột phải System Tray chuyên nghiệp:
-    - 🖥 Mở Dashboard
-    - ✂ Chọn vùng dịch mới (`Ctrl + Alt + Q`)
-    - ▶ / ⏸ Bắt đầu / Tạm dừng dịch
-    - ⏹ Dừng dịch
-    - ⚙ Cài đặt
-    - 🚪 Thoát ứng dụng (giải phóng toàn bộ tiến trình con)
-- **State Machine & Lifecycle Quản lý Phiên Dịch:**
-  - Triển khai máy trạng thái hoàn chỉnh: `Idle → SelectingRegion → Starting → Translating → Paused → Stopped`.
-  - Cơ chế **Session ID** và **Anti-Stale Results**: Tự động vô hiệu hóa và loại bỏ các bản dịch trễ của phiên trước hoặc khi đổi vùng.
-  - Tự động căn chỉnh vị trí Overlay cạnh vùng phụ đề (`PositionNearRegion`), hỗ trợ màn hình độ phân giải cao và đa màn hình.
-  - Xử lý thông báo trực quan khi video bị DRM hoặc ứng dụng bảo vệ chặn capture.
+### Tính Năng Mới & Củng Cố Độ Tin Cậy (Release Hardening)
+- **Multi-Model Offline Translation Router & Rollback An Toàn:**
+  - Hỗ trợ định tuyến **VietAI EnViT5 (`envit5_ct2_int8`)** cho cặp hội thoại `EN ↔ VI` và **Facebook M2M-100 (`m2m100_418m_ct2`)** cho `ZH ↔ VI`, `EN ↔ ZH` cùng cơ chế fallback tự động khi thiếu model chuyên biệt.
+- **Tối Ưu Hóa Whisper.net (`ggml-base.bin`) & Audio Realtime:**
+  - Đồng bộ đường dẫn `%LocalAppData%\ScreenSubAI\Models\whisper\ggml-base.bin` và SHA-256 chính thức (`60ed5bc3dd14eea856493d334349b405782ddcaf0028d4b5df4088345fba2efe`).
+  - Áp dụng `WithGreedySamplingStrategy(bestOf=1)`, `WithNoContext()`, `WithAudioContextSize(768)` cho phân đoạn VAD `<= 8s` và `ResolveSpeechLanguage()` giúp giảm độ trễ Whisper từ `~2.868 ms` xuống **`~671–678 ms` (P50)** khi chọn `English`/`Chinese` và `~2.040 ms` ở chế độ `Auto`.
+  - Sửa lỗi rollover `_speechStartTimeMs` trong `EnergyVoiceActivityDetector` khi thoại liên tục vượt `MaxSpeechDurationMs`.
+- **Semantic-Safe Hybrid Deduplication (P1 Safety Fix):**
+  - Bổ sung kiểm tra độ mới của OCR (`_lastOcrSeenTimeUtc <= 4.500 ms`), kiểm tra cực phủ định (`不/没/not/never/don't...`), khớp số đếm/thời gian (`三点` vs `四点`, `8:00` vs `9:00`), từ trái nghĩa hành động (`打开` vs `关闭`, `turn on` vs `turn off`, `lock` vs `unlock`), bảo vệ tên người/địa danh (`北京` vs `南京`, `小王` vs `小张`, `Smith` vs `Jones`), và chuẩn hóa chữ Hán Phồn ↔ Giản qua Win32 `LCMapStringEx`.
+- **Windows Installer (`v1.0.0-beta.2`) & Sửa Lỗi P0 `InitializeSetup()`:**
+  - Khắc phục lỗi mở rộng hằng `{app}` sớm trong `ScreenSubAI_Setup.iss`.
+  - Tách phiên bản bộ cài mới `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (~50,18 MB, `.NET 10 Self-Contained`), bảo toàn bản `v1.0.0-beta.1` (`50,17 MB`, SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`) để rollback.
 
 ### Thử Nghiệm & Chất Lượng
-- Đạt **55 / 55 bài kiểm thử tự động vượt qua (100% PASS)**: 28 Unit Tests + 27 Integration Tests.
-- Đóng gói bản cài đặt chính thức: `dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` (8.80 MB, SHA-256: `18F683E28A68775C32AE6C321B5DF4FBF1B8447FE769BCA15C6805F46A462C65`).
+- Đạt **242 / 242 bài kiểm thử tự động vượt qua (100% PASS, 0 Skipped trên máy đầy đủ phần cứng/model)**: **161 Unit Tests + 81 Integration Tests**.
+- Toàn bộ bài kiểm thử phần cứng dùng `[HardwareFact]` (báo `SKIPPED` kèm lý do rõ ràng nếu thiếu thiết bị/model, không bao giờ báo `PASS` giả).
 
 ---
 

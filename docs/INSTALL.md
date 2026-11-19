@@ -1,4 +1,4 @@
-# Hướng Dẫn Cài Đặt ScreenSub AI (Windows Beta v1.0.0)
+# Hướng Dẫn Cài Đặt ScreenSub AI (Windows Beta v1.0.0-beta.2)
 
 Tài liệu hướng dẫn cài đặt và thiết lập môi trường cho ứng dụng **ScreenSub AI — Windows Realtime Subtitle Translator**.
 
@@ -19,10 +19,10 @@ Tài liệu hướng dẫn cài đặt và thiết lập môi trường cho ứn
 ## 2. Các Bước Cài Đặt Trên Máy Windows Sạch (Clean Windows)
 
 ### Phương án đóng gói (.NET Self-Contained + Tùy chọn Python Portable / Consented Setup)
-Bộ cài chuẩn `ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` được build ở chế độ **`.NET 10 Self-Contained (win-x64)`** nên **không bắt buộc người dùng cài trước .NET 10 Desktop Runtime**. (Có thể build bản nhẹ framework-dependent bằng `build_installer.ps1 -SelfContained $false`).
+Bộ cài chuẩn `ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`~50,18 MB`) được build ở chế độ **`.NET 10 Self-Contained (win-x64)`** với `PrivilegesRequired=lowest` (cài được trên cả tài khoản Non-Admin lẫn Admin) nên **không bắt buộc người dùng cài trước .NET 10 Desktop Runtime**. Bản `ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` (`50,17 MB`, SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`) vẫn được giữ song song trong `dist/` để hỗ trợ rollback.
 
 ### Bước 1: Chạy File Cài Đặt
-1. Chạy `ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` (tạo từ `installer\build_installer.ps1`).
+1. Chạy `ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (tạo từ `installer\build_installer.ps1 -Version "1.0.0-beta.2"`).
 2. Đọc và xác nhận thông báo bản quyền bên thứ ba (`docs\THIRD_PARTY_LICENSES.txt`, gồm **MIT**, **Apache-2.0** và **OpenRAIL-M** cho `VietAI/envit5-translation`).
 3. Chọn thư mục cài đặt và nhấn **Install**.
 
