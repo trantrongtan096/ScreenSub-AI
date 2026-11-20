@@ -10,7 +10,7 @@ publish/
 dist/
 __pycache__/
 *.pyc
-models/
+/models/
 *.bin
 *.onnx
 

@@ -365,4 +365,65 @@ public class EndToEndPipelineTests : IAsyncLifetime
 
         threadEx.Should().BeNull();
     }
+
+    [Fact]
+    public async Task TestK_EnglishOcrWordSpacing_RealTightAndCompressedSubtitles_ShouldReconstructCleanlyWithoutBreakingBrandsOrCjkVi()
+    {
+        var cases = new (string FontName, float FontSize, bool OutlinedJpeg, string GroundTruth, SourceLanguage Lang)[]
+        {
+            ("Arial", 20f, false, "out it may belong to a different township.", SourceLanguage.English),
+            ("Segoe UI", 18f, false, "Do not turn off the computer before leaving the office.", SourceLanguage.English),
+            ("Arial", 20f, true,  "But it may belong to a different township.", SourceLanguage.English),
+            ("Arial", 20f, false, "This is the first time I have seen YouTube on my iPhone.", SourceLanguage.English),
+            ("Arial", 18f, false, "We must find out if it belongs to a different township.", SourceLanguage.English),
+            ("Arial", 20f, true,  "Please check the server latency in the production cluster.", SourceLanguage.English),
+            ("Microsoft YaHei", 22f, false, "你好，欢迎大家参加今天的软件测试会议。", SourceLanguage.Chinese)
+        };
+
+        foreach (var (fontName, fontSize, outlinedJpeg, gt, lang) in cases)
+        {
+            byte[] imgBytes = RenderSingleLineSubtitleScreenshot(gt, fontName, fontSize, outlinedJpeg);
+            var ocrResult = await _ocrEngine.RecognizeAsync(imgBytes);
+            ocrResult.HasText.Should().BeTrue($"OCR should recognize '{gt}'");
+
+            var analysis = SubtitleTextProcessor.AnalyzeOcrText(ocrResult.FullText, lang);
+            analysis.PrimarySourceText.Should().Be(gt,
+                $"tight/compressed subtitle '{gt}' ({fontName} {fontSize}px, jpeg={outlinedJpeg}) must preserve word spacing without gluing words or breaking brands");
+        }
+    }
+
+    private static byte[] RenderSingleLineSubtitleScreenshot(string text, string fontName, float fontSize, bool outlinedJpeg)
+    {
+        using var bmp = new Bitmap(920, 96);
+        using var g = Graphics.FromImage(bmp);
+        g.Clear(Color.FromArgb(18, 22, 32));
+        g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+
+        using var font = new Font(fontName, fontSize, FontStyle.Regular, GraphicsUnit.Pixel);
+        using var whiteBrush = new SolidBrush(Color.White);
+        using var blackBrush = new SolidBrush(Color.Black);
+
+        if (outlinedJpeg)
+        {
+            foreach (var (dx, dy) in new[] { (-1, 0), (1, 0), (0, -1), (0, 1), (1, 1) })
+            {
+                g.DrawString(text, font, blackBrush, 24 + dx, 32 + dy);
+            }
+        }
+        g.DrawString(text, font, whiteBrush, 24, 32);
+
+        using var ms = new MemoryStream();
+        if (outlinedJpeg)
+        {
+            var jpegCodec = ImageCodecInfo.GetImageEncoders().First(c => c.FormatID == ImageFormat.Jpeg.Guid);
+            using var encParams = new EncoderParameters(1);
+            encParams.Param[0] = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, 62L);
+            bmp.Save(ms, jpegCodec, encParams);
+        }
+        else
+        {
+            bmp.Save(ms, ImageFormat.Png);
+        }
+        return ms.ToArray();
+    }
 }

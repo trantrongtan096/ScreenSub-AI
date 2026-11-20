@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/Release-v1.0.0--beta.2-blue.svg)](https://github.com/trantrongtan096/ScreenSub-AI)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)](https://microsoft.com/windows)
 [![.NET](https://img.shields.io/badge/.NET-10.0%20WPF-purple.svg)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-242%2F242%20Passing-success.svg)](docs/BETA_RC_VALIDATION_REPORT.md)
+[![Tests](https://img.shields.io/badge/Tests-271%2F271%20Passing-success.svg)](docs/BETA_RC_VALIDATION_REPORT.md)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
 ![ScreenSub AI](docs/dashboard-preview.jpg)
@@ -25,7 +25,7 @@ Hệ thống dịch thuật **100% Offline** hỗ trợ **Multi-Model Offline Ro
 ## 🚀 Tính năng nổi bật: Quick Translate & Chạy nền (Background Mode)
 
 - **⚡ Dịch tức thì (Quick Translate Mode)**: Đang xem phim/YouTube trên Chrome/Edge hoặc bất kỳ cửa sổ nào, chỉ cần nhấn **`Ctrl + Alt + Q`**, kéo chọn vùng phụ đề. Ứng dụng **tự động lưu vùng, tự động định vị Overlay trên video và tự động kích hoạt nhận diện/dịch ngay lập tức** mà **không cần quay lại Dashboard bấm Start**!
-- **🛎 Khay hệ thống (System Tray)**: Thu nhỏ Dashboard xuống khay hệ thống khi đóng cửa sổ. Pipeline nhận diện, Overlay và phím tắt toàn cục vẫn tiếp tục chạy mượt mà dưới nền. Menu chuột phải đầy đủ: Mở Dashboard, Chọn vùng mới, Bắt đầu/Tạm dừng, Dừng, Cài đặt và Thoát ứng dụng.
+- **🛎 Khay hệ thống (System Tray — Fluent Dark Mode)**: Thu nhỏ Dashboard xuống khay hệ thống khi đóng cửa sổ. Pipeline nhận diện, Overlay và phím tắt toàn cục vẫn tiếp tục chạy mượt mà dưới nền. Menu chuột phải thiết kế Fluent Dark (`#0F172A`, không dải trắng bên trái, icon vector, trạng thái động `Đã dừng / Đang dịch / Tạm dừng`, hỗ trợ DPI 100%–200% & đa màn hình): Mở Dashboard, Chọn vùng dịch mới (`Ctrl+Alt+Q`), Bắt đầu/Tạm dừng/Tiếp tục dịch, Dừng dịch, Cài đặt và Thoát ứng dụng.
 
 ---
 
@@ -70,7 +70,7 @@ Xem hướng dẫn cài đặt & thiết lập Python dependencies (`setup_pytho
   - DPI Awareness `PerMonitorV2` (100%, 125%, 150%) chuẩn xác theo từng pixel vật lý.
   - Hoạt động mượt mà trên màn hình phụ có tọa độ âm.
 - **Realtime OCR Pipeline (RapidOCR / PaddleOCR)**:
-  - Tối ưu hóa độ trễ: **~61.9 ms P50**, đạt thông lượng ~15 FPS.
+  - Tối ưu hóa độ trễ: **~61.9 ms P50**, đạt thông lượng ~15 FPS; chuẩn hóa bicubic cho crop phụ đề nhỏ (`4 <= height < 38px -> 48px`) trong `ocr_worker.py` giúp giữ sắc nét khoảng trắng tiếng Anh mà không cần từ điển tách từ bên ngoài, bảo toàn nguyên vẹn thương hiệu CamelCase (`YouTube`, `iPhone`, `ScreenSubAI`, `PostgreSQL`), tên riêng, từ ghép, CJK và tiếng Việt.
   - Phát hiện thay đổi khung hình (Frame Change Detection) để tiết kiệm CPU khi video tĩnh.
   - Bộ lọc ổn định phụ đề ghép dòng và chống giật/nhấp nháy.
 - **Audio Realtime Translation & Hybrid Mode**:
@@ -117,8 +117,8 @@ ScreenSubAI/
 ├── publish/                      # Self-contained Release binaries for packaging
 ├── test_assets/                  # Sample audio WAV & test images for automated testing
 ├── tests/
-│   ├── UnitTests/                # 120 Unit tests (xUnit, FluentAssertions)
-│   ├── IntegrationTests/         # 79 Integration & Hardware E2E tests (Explicit HardwareFact skip/verify)
+│   ├── UnitTests/                # 188 Unit tests (xUnit, FluentAssertions)
+│   ├── IntegrationTests/         # 83 Integration & Hardware E2E tests (Explicit HardwareFact skip/verify)
 │   ├── benchmark_30_sentences_6_directions.py # 30-sentence benchmark suite
 │   ├── quality_evaluation_suite.py            # 8-category translation quality audit
 │   └── stability_soak_test.py                 # 100-cycle OCR & 50-cycle Translation soak test
@@ -142,7 +142,7 @@ ScreenSubAI/
 
 1. **OCR Tiếng Trung Phồn thể (`zh-Hant`):** Bộ từ điển `PP-OCRv4` mặc định tập trung cho chữ Giản thể và tiếng Anh; các ký tự Phồn thể nhiều nét ngoài từ điển (OOV) có thể bị nhận diện thiếu nét.
 2. **Độ trễ chế độ `SourceLanguage = Auto` trên Audio:** Khi để tự động nhận diện ngôn ngữ nói (`Auto`), Whisper cần chạy thêm lượt nhận diện ngôn ngữ (~2,0 s trên CPU 4 nhân) so với khi chọn trực tiếp `English` hoặc `Chinese` (~0,67 s).
-3. **Các hạng mục nghiệm thu còn `PENDING` trước khi mở Wide Beta:** Kiểm thử trên máy ảo Windows 10/11 hoàn toàn sạch (chưa cài sẵn Python/VC++), kiểm thử tương tác đa màn hình khác DPI / game Borderless Fullscreen, và chạy Soak Test liên tục đủ 60 phút.
+3. **Các hạng mục nghiệm thu còn `PENDING` trước khi mở Wide Beta:** Kiểm thử trên máy ảo Windows 10/11 hoàn toàn sạch (chưa cài sẵn Python/VC++), kiểm thử tương tác đa màn hình khác DPI / game Borderless Fullscreen / rút mạng vật lý, và đánh giá bộ OCR Phồn thể opt-in (`PP-OCRv3 CHT` / `PP-OCRv5`). *(Soak Test liên tục 60 phút trên `ScreenSub.Desktop.exe` đã hoàn tất `PASS`, `0` crash / `0` leak / `0` worker restart).*
 
 ---
 
@@ -155,7 +155,7 @@ ScreenSubAI/
 dotnet build ScreenSubAI.slnx -c Release
 ```
 
-### 2. Chạy kiểm thử tự động (242/242 Tests Passed)
+### 2. Chạy kiểm thử tự động (271/271 Tests Passed)
 
 ```powershell
 dotnet test ScreenSubAI.slnx -c Release
@@ -163,9 +163,9 @@ dotnet test ScreenSubAI.slnx -c Release
 
 Kết quả trên máy đầy đủ môi trường phần cứng & mô hình cục bộ:
 ```text
-Passed! - UnitTests.dll (161 tests, 0 failed, 0 skipped)
-Passed! - IntegrationTests.dll (81 tests, 0 failed, 0 skipped)
-Total: 242 passed, 0 failed, 0 skipped.
+Passed! - UnitTests.dll (188 tests, 0 failed, 0 skipped)
+Passed! - IntegrationTests.dll (83 tests, 0 failed, 0 skipped)
+Total: 271 passed, 0 failed, 0 skipped.
 ```
 *(Các bài kiểm thử phần cứng/model dùng `[HardwareFact]` sẽ báo `SKIPPED` kèm lý do rõ ràng nếu máy chưa cài mô hình hoặc không có thiết bị âm thanh, không bao giờ báo `PASS` giả).*
 

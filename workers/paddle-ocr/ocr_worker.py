@@ -163,14 +163,11 @@ def restore_word_spacing(text):
     text = re.sub(r'\s+([，。！？；：、“”‘’（）《》])', r'\1', text)
     text = re.sub(r'([，。！？；：、“”‘’（）《》])\s+', r'\1', text)
 
-    # 2. Insert space at CamelCase / PascalCase word boundaries in Latin text
-    text = re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', text)
-    text = re.sub(r'(?<=[A-Z])(?=[A-Z][a-z])', ' ', text)
+    # 2. Insert space after sentence/clause punctuation if immediately followed by a letter
+    #    (skip dots inside domain/file names or abbreviations by requiring comma/!/?/;/: or dot followed by >=2 letters after a >=2-letter word)
+    text = re.sub(r'([,\?!;:])(?=[a-zA-Z])', r'\1 ', text)
 
-    # 3. Insert space after punctuation if immediately followed by a letter
-    text = re.sub(r'([,\.\?!;:])(?=[a-zA-Z])', r'\1 ', text)
-
-    # 4. Collapse multiple spaces into one
+    # 3. Collapse multiple spaces into one
     text = re.sub(r'[ ]{2,}', ' ', text)
     return text.strip()
 
@@ -209,44 +206,66 @@ def _decode_bgr_and_scale(image_bytes):
     # RapidOCR expects BGR channel order when given an ndarray
     return np.ascontiguousarray(np.array(image)[:, :, ::-1]), scale
 
+def _enhance_small_crops_for_rec(crops):
+    """Upscales small text-line crops (height < 38px) to 48px with bicubic interpolation so narrow Latin inter-word gaps stay crisp for CTC decoding."""
+    if not CV2_AVAILABLE or not crops:
+        return crops
+    enhanced = []
+    for crop in crops:
+        if crop is None or crop.size == 0:
+            enhanced.append(crop)
+            continue
+        ch, cw = crop.shape[:2]
+        if 4 <= ch < 38 and cw > 0:
+            sc = 48.0 / float(ch)
+            new_w = max(1, int(round(cw * sc)))
+            crop = cv2.resize(crop, (new_w, 48), interpolation=cv2.INTER_CUBIC)
+        enhanced.append(crop)
+    return enhanced
+
 def _run_rapidocr_decoupled(img_np):
-    """Runs TextDetector on <=960px side and crops TextRecognizer directly from full-res img_np."""
+    """Runs TextDetector (downscaled if >960px) and crops TextRecognizer directly from full-res img_np with bicubic small-crop normalization."""
     cur_h, cur_w = img_np.shape[:2]
     det_ms = 0.0
     cls_ms = 0.0
     rec_ms = 0.0
 
-    if max(cur_h, cur_w) > 960 and CV2_AVAILABLE and hasattr(ocr_instance, "text_det") and hasattr(ocr_instance, "text_rec"):
-        d_sc = 960.0 / max(cur_h, cur_w)
-        det_h = int(cur_h * d_sc)
-        det_w = int(cur_w * d_sc)
-        min_h = getattr(ocr_instance, "min_height", 30)
-        if det_h > min_h and det_w > 32:
-            det_img = cv2.resize(img_np, (det_w, det_h), interpolation=cv2.INTER_AREA)
-            dt_boxes, det_elapse = ocr_instance.text_det(det_img)
-            det_ms = float(det_elapse or 0.0) * 1000.0
-            if dt_boxes is None or len(dt_boxes) == 0:
-                return [], det_ms, 0.0, 0.0
+    if CV2_AVAILABLE and hasattr(ocr_instance, "text_det") and hasattr(ocr_instance, "text_rec"):
+        d_sc = 1.0
+        det_img = img_np
+        if max(cur_h, cur_w) > 960:
+            candidate_sc = 960.0 / max(cur_h, cur_w)
+            det_h = int(cur_h * candidate_sc)
+            det_w = int(cur_w * candidate_sc)
+            min_h = getattr(ocr_instance, "min_height", 30)
+            if det_h > min_h and det_w > 32:
+                d_sc = candidate_sc
+                det_img = cv2.resize(img_np, (det_w, det_h), interpolation=cv2.INTER_AREA)
 
-            inv = 1.0 / d_sc
-            scaled_boxes = []
-            for box in ocr_instance.sorted_boxes(dt_boxes):
-                b = box.astype(np.float32) * inv
-                b[:, 0] = np.clip(b[:, 0], 0, max(0, cur_w - 1))
-                b[:, 1] = np.clip(b[:, 1], 0, max(0, cur_h - 1))
-                scaled_boxes.append(b)
+        dt_boxes, det_elapse = ocr_instance.text_det(det_img)
+        det_ms = float(det_elapse or 0.0) * 1000.0
+        if dt_boxes is None or len(dt_boxes) == 0:
+            return [], det_ms, 0.0, 0.0
 
-            crops = ocr_instance.get_crop_img_list(img_np, scaled_boxes)
-            rec_res, rec_elapse = ocr_instance.text_rec(crops, False)
-            rec_ms = float(rec_elapse or 0.0) * 1000.0
+        inv = 1.0 / d_sc
+        scaled_boxes = []
+        for box in ocr_instance.sorted_boxes(dt_boxes):
+            b = box.astype(np.float32) * inv
+            b[:, 0] = np.clip(b[:, 0], 0, max(0, cur_w - 1))
+            b[:, 1] = np.clip(b[:, 1], 0, max(0, cur_h - 1))
+            scaled_boxes.append(b)
 
-            results = []
-            score_thresh = float(getattr(ocr_instance, "text_score", 0.5))
-            for bx, rc in zip(scaled_boxes, rec_res):
-                txt, conf = rc[0], float(rc[1])
-                if txt and conf >= score_thresh:
-                    results.append([bx.tolist(), txt, conf])
-            return results, det_ms, cls_ms, rec_ms
+        crops = _enhance_small_crops_for_rec(ocr_instance.get_crop_img_list(img_np, scaled_boxes))
+        rec_res, rec_elapse = ocr_instance.text_rec(crops, False)
+        rec_ms = float(rec_elapse or 0.0) * 1000.0
+
+        results = []
+        score_thresh = float(getattr(ocr_instance, "text_score", 0.5))
+        for bx, rc in zip(scaled_boxes, rec_res):
+            txt, conf = rc[0], float(rc[1])
+            if txt and conf >= score_thresh:
+                results.append([bx.tolist(), txt, conf])
+        return results, det_ms, cls_ms, rec_ms
 
     results, elapse = ocr_instance(img_np)
     if elapse and len(elapse) >= 3:

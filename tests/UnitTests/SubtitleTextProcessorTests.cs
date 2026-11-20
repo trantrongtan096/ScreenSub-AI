@@ -397,5 +397,60 @@ public class SubtitleTextProcessorTests
         newFp.Should().Be(0, "semantic-safe guard must achieve 0% false-positive suppression on opposite/different meaning pairs");
         newFn.Should().Be(0, "semantic-safe guard must achieve 0% false-negative on true equivalent & 1-word homophone pairs");
     }
+
+    // =========================================================================
+    // OCR Spacing Normalization & False-Correction Safety Regression Suite
+    // (Word spacing is preserved at recognition time via ocr_worker.py bicubic
+    //  small-crop normalization; C# post-processing strictly avoids heuristic
+    //  dictionary splitting to guarantee 0% false corrections and license safety.)
+    // =========================================================================
+
+    [Theory]
+    [InlineData("山 路 一 路 蜿 蜒 ，", "山路一路蜿蜒，")]
+    [InlineData("你好 ， 欢迎 大家 参加 今天的 会议 。", "你好，欢迎大家参加今天的会议。")]
+    [InlineData("Wait a second,did you lock the door?Yes:all clear;thanks!", "Wait a second, did you lock the door? Yes: all clear; thanks!")]
+    [InlineData("First sentence.Second sentence starts here.", "First sentence. Second sentence starts here.")]
+    [InlineData("Multiple   spaces   between   words.", "Multiple spaces between words.")]
+    [InlineData("Line one,with comma.\nLine two?Yes!", "Line one, with comma.\nLine two? Yes!")]
+    public void RestoreWordSpacing_CjkAndPunctuationNormalization_ShouldCleanSafely(string rawOcr, string expected)
+    {
+        string reconstructed = SubtitleTextProcessor.RestoreWordSpacing(rawOcr);
+        reconstructed.Should().Be(expected);
+    }
+
+    [Theory]
+    [InlineData("ScreenSub AI uses RapidOCR, PaddleOCR, EnViT5 and CTranslate2 on Windows.")]
+    [InlineData("Launch ScreenSubAI to translate live subtitles cleanly.")]
+    [InlineData("She talked to her therapist because there is nowhere left to hide.")]
+    [InlineData("He opened his notebook after football and migrated the database to PostgreSQL.")]
+    [InlineData("Not a single ship dared cross the strait while the conductor waited.")]
+    [InlineData("Watch YouTube on iPhone, iPad, MacBook or PlayStation via GitHub and OpenAI.")]
+    [InlineData("We deployed DuckDB, ClickHouse, HuggingFace, DeepSeek, OnePlus, PowerBI and NextJS.")]
+    [InlineData("PostgreSQL, MySQL, JavaScript, TypeScript, PowerShell, DirectML and TensorRT.")]
+    [InlineData("Dr. McDonald and General MacArthur visited Washington and Johannesburg.")]
+    [InlineData("Luke Skywalker arrived at Winterfell while Waterloo connects Westminster to Brighton.")]
+    [InlineData("Detective Blackwood drove through Greensboro, Newcastle and Stonehaven.")]
+    [InlineData("The lifeguard, housekeeper, eyewitness, caretaker and blacksmith avoided the landslide and hillside.")]
+    [InlineData("Their screenplay, broadsword, stronghold, boathouse, workaround and changelog remained intact.")]
+    [InlineData("Understanding international communication, development, townships and subtitles.")]
+    [InlineData("Visit https://github.com/trantrongtan096/ScreenSub-AI or run app.exe today.")]
+    [InlineData("你好，欢迎大家参加今天的软件测试会议。")]
+    [InlineData("請問明天的國際航班是早上八點起飛嗎？")]
+    [InlineData("Xin chào, hôm nay trời rất đẹp ở Hà Nội và Thành phố Hồ Chí Minh.")]
+    [InlineData("Vui long tat toan bo thiet bi dien truoc khi roi khoi phong.")]
+    [InlineData("Moi hanh khach can xuat trinh the len may bay tai cong kiem soat.")]
+    public void RestoreWordSpacing_ValidWordsBrandsProperNounsAndCjkVi_ShouldNeverOverSplit(string cleanInput)
+    {
+        string reconstructed = SubtitleTextProcessor.RestoreWordSpacing(cleanInput);
+        reconstructed.Should().Be(cleanInput);
+    }
+
+    [Fact]
+    public void ScreenSubCoreAssembly_ShouldNotEmbedUnlicensedLexiconResource()
+    {
+        var resources = typeof(SubtitleTextProcessor).Assembly.GetManifestResourceNames();
+        resources.Should().NotContain(r => r.Contains("english_lexicon", StringComparison.OrdinalIgnoreCase),
+            "unlicensed Windows ISpellChecker-derived lexicon must never be embedded in ScreenSub.Core.dll");
+    }
 }
 

@@ -597,6 +597,17 @@ public sealed class SubtitleCoordinator : ISubtitleCoordinator
             State = SystemState.Translating;
             if (Mode != TranslationMode.ScreenOcr)
             {
+                if (_speechService != null && !_speechService.IsModelLoaded && _cts != null)
+                {
+                    var initCt = _cts.Token;
+                    _ = Task.Run(() => _speechService.InitializeAsync(initCt), initCt);
+                }
+                if ((_speechWorkerTask == null || _speechWorkerTask.IsCompleted) && _speechChannel != null && _cts != null)
+                {
+                    var speechReader = _speechChannel.Reader;
+                    var workerCt = _cts.Token;
+                    _speechWorkerTask = Task.Run(() => SpeechWorkerLoopAsync(speechReader, workerCt));
+                }
                 _audioCaptureService?.Start();
             }
             PipelineStatusText = Mode == TranslationMode.AudioRealtime

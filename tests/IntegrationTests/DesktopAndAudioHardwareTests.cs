@@ -1,13 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using FluentAssertions;
 using ScreenSub.Audio.Capture;
 using ScreenSub.Capture;
 using ScreenSub.Core.Enums;
 using ScreenSub.Core.Models;
+using ScreenSub.Desktop.Services;
 using ScreenSub.Overlay;
 using Xunit;
 using Xunit.Abstractions;
@@ -178,5 +186,234 @@ public class DesktopAndAudioHardwareTests
         (exStyle & WS_EX_NOACTIVATE).Should().NotBe(0);
         ((long)gdiEnd - gdiStart).Should().BeLessThanOrEqualTo(10, "50 overlay updates must not leak GDI handles");
         ((long)userEnd - userStart).Should().BeLessThanOrEqualTo(5, "50 overlay updates must not leak USER handles");
+    }
+
+    [Fact]
+    public void SystemTrayContextMenu_FluentDarkRedesign_ShouldEliminateLeftWhiteGutter_VerifyStatesActionsDpiAndRenderScreenshots()
+    {
+        Exception? staException = null;
+        string artifactDir = Environment.GetEnvironmentVariable("SCREENSUB_TRAY_ARTIFACT_DIR")
+                             ?? Path.Combine(Path.GetTempPath(), "ScreenSubAI_TrayScreenshots");
+        Directory.CreateDirectory(artifactDir);
+        string stoppedPng = Path.Combine(artifactDir, "tray_menu_stopped.png");
+        string translatingPng = Path.Combine(artifactDir, "tray_menu_translating.png");
+        string pausedPng = Path.Combine(artifactDir, "tray_menu_paused.png");
+
+        var sta = new Thread(() =>
+        {
+            try
+            {
+                var hostWin = new Window
+                {
+                    Width = 200,
+                    Height = 120,
+                    Left = -2000,
+                    Top = -2000,
+                    WindowStyle = WindowStyle.None,
+                    ShowInTaskbar = false,
+                    ShowActivated = false
+                };
+                hostWin.Show();
+                nint hwnd = new System.Windows.Interop.WindowInteropHelper(hostWin).Handle;
+
+                int openDashCount = 0, selectRegionCount = 0, toggleCount = 0, stopCount = 0, settingsCount = 0, exitCount = 0;
+
+                using var tray = new SystemTrayManager(hwnd)
+                {
+                    OpenDashboardAction = () => openDashCount++,
+                    SelectNewRegionAction = () => selectRegionCount++,
+                    ToggleStartPauseAction = () => toggleCount++,
+                    StopAction = () => stopCount++,
+                    OpenSettingsAction = () => settingsCount++,
+                    ExitApplicationAction = () => exitCount++
+                };
+
+                var menu = tray.ContextMenu;
+                menu.Should().NotBeNull();
+
+                // 1. Verify Header is a non-focusable Border (NOT a disabled MenuItem)
+                menu!.Items.Count.Should().Be(10); // 1 Header Border + 3 Separators + 6 MenuItems
+                var headerBorder = menu.Items[0] as Border;
+                headerBorder.Should().NotBeNull("header must be a pure Border container, not a disabled MenuItem");
+                headerBorder!.Focusable.Should().BeFalse();
+                headerBorder.IsHitTestVisible.Should().BeFalse();
+
+                var menuItems = menu.Items.OfType<MenuItem>().ToList();
+                menuItems.Count.Should().Be(6, "only the 6 interactive actions should be MenuItems");
+
+                // 2. Verify labels, shortcut gesture text, and absence of emoji
+                menuItems[0].Header.Should().Be("Mở Dashboard");
+                menuItems[1].Header.Should().Be("Chọn vùng dịch mới");
+                menuItems[1].InputGestureText.Should().Be("Ctrl+Alt+Q");
+                menuItems[2].Header.Should().Be("Bắt đầu dịch");
+                menuItems[3].Header.Should().Be("Dừng dịch");
+                menuItems[3].IsEnabled.Should().BeFalse("Stop must be disabled when Idle/Stopped");
+                menuItems[4].Header.Should().Be("Cài đặt");
+                menuItems[5].Header.Should().Be("Thoát ứng dụng");
+
+                foreach (var mi in menuItems)
+                {
+                    mi.Icon.Should().BeOfType<Canvas>("every MenuItem must use a vector Canvas icon instead of emoji");
+                    mi.Height.Should().BeInRange(36, 40);
+                }
+
+                // 3. Open the real context menu, realize its visual tree, and verify custom ControlTemplate (no white left gutter)
+                tray.ShowContextMenuAtScreenPixel(new SystemTrayManager.POINT { X = 1880, Y = 1030 });
+                menu.ApplyTemplate();
+                menu.UpdateLayout();
+
+                var outerBorder = menu.Template.FindName("MenuOuterBorder", menu) as Border;
+                outerBorder.Should().NotBeNull("custom TrayContextMenuStyle ControlTemplate must define MenuOuterBorder");
+                outerBorder!.CornerRadius.Should().Be(new CornerRadius(12));
+                ((SolidColorBrush)outerBorder.Background).Color.Should().Be(Color.FromRgb(15, 23, 42));   // #0F172A
+                ((SolidColorBrush)outerBorder.BorderBrush).Color.Should().Be(Color.FromRgb(51, 65, 85));  // #334155
+
+                foreach (var mi in menuItems)
+                {
+                    mi.ApplyTemplate();
+                    mi.UpdateLayout();
+                    var itemBorder = mi.Template.FindName("ItemBorder", mi) as Border;
+                    itemBorder.Should().NotBeNull($"MenuItem '{mi.Header}' must use custom TrayMenuItemStyle template without left gutter");
+                    itemBorder!.CornerRadius.Should().Be(new CornerRadius(8));
+                }
+
+                // Render Screenshot 1: Stopped state (with primary action 'Bắt đầu dịch' highlighted as in mockup)
+                var startItemBorder = menuItems[2].Template.FindName("ItemBorder", menuItems[2]) as Border;
+                if (startItemBorder != null)
+                {
+                    startItemBorder.Background = new SolidColorBrush(Color.FromRgb(22, 59, 69));   // #163B45
+                    startItemBorder.BorderBrush = new SolidColorBrush(Color.FromRgb(37, 92, 105)); // #255C69
+                }
+                outerBorder.UpdateLayout();
+                if (Directory.Exists(artifactDir))
+                {
+                    SaveElementPng(outerBorder, stoppedPng);
+                }
+                if (startItemBorder != null)
+                {
+                    startItemBorder.ClearValue(Border.BackgroundProperty);
+                    startItemBorder.ClearValue(Border.BorderBrushProperty);
+                }
+
+                // 4. Verify state transition: Translating ("Đang dịch", "Tạm dừng", Stop enabled)
+                tray.UpdateState(SystemState.Translating);
+                outerBorder.UpdateLayout();
+                menuItems[2].Header.Should().Be("Tạm dừng");
+                menuItems[3].IsEnabled.Should().BeTrue("Stop must be enabled while Translating");
+                if (Directory.Exists(artifactDir))
+                {
+                    SaveElementPng(outerBorder, translatingPng);
+                }
+
+                // 5. Verify state transition: Paused ("Tạm dừng", "Tiếp tục dịch", Stop enabled)
+                tray.UpdateState(SystemState.Paused);
+                outerBorder.UpdateLayout();
+                menuItems[2].Header.Should().Be("Tiếp tục dịch");
+                menuItems[3].IsEnabled.Should().BeTrue("Stop must be enabled while Paused");
+                if (Directory.Exists(artifactDir))
+                {
+                    SaveElementPng(outerBorder, pausedPng);
+                }
+
+                // 6. Verify state transition back to Stopped ("Đã dừng", "Bắt đầu dịch", Stop disabled)
+                tray.UpdateState(SystemState.Stopped);
+                menuItems[2].Header.Should().Be("Bắt đầu dịch");
+                menuItems[3].IsEnabled.Should().BeFalse();
+
+                // 7. Verify all 6 actions fire properly
+                tray.UpdateState(SystemState.Translating); // enable Stop item so all 6 can be invoked
+                menuItems[0].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menuItems[1].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menuItems[2].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menuItems[3].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menuItems[4].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+                menuItems[5].RaiseEvent(new RoutedEventArgs(MenuItem.ClickEvent));
+
+                openDashCount.Should().Be(1);
+                selectRegionCount.Should().Be(1);
+                toggleCount.Should().Be(1);
+                stopCount.Should().Be(1);
+                settingsCount.Should().Be(1);
+                exitCount.Should().Be(1);
+
+                menu.IsOpen = false;
+                hostWin.Close();
+            }
+            catch (Exception ex)
+            {
+                staException = ex;
+            }
+        });
+
+        sta.SetApartmentState(ApartmentState.STA);
+        sta.Start();
+        sta.Join();
+
+        staException.Should().BeNull();
+
+        // 8. Verify DPI 100%–200% and multi-monitor edge clamping math
+        var menuSize = new Size(312, 344);
+        foreach (double scale in new[] { 1.0, 1.25, 1.5, 2.0 })
+        {
+            var workPx = new SystemTrayManager.RECT
+            {
+                Left = 0,
+                Top = 0,
+                Right = (int)(1920 * scale),
+                Bottom = (int)(1032 * scale)
+            };
+            var trayCursorPx = new SystemTrayManager.POINT
+            {
+                X = (int)(1910 * scale),
+                Y = (int)(1028 * scale)
+            };
+
+            Point posDip = SystemTrayManager.CalculateClampedMenuPositionDip(trayCursorPx, workPx, scale, scale, menuSize);
+            posDip.X.Should().BeGreaterThanOrEqualTo(4);
+            (posDip.X + menuSize.Width).Should().BeLessThanOrEqualTo(1920 - 4);
+            posDip.Y.Should().BeGreaterThanOrEqualTo(4);
+            (posDip.Y + menuSize.Height).Should().BeLessThanOrEqualTo(1032 - 4);
+        }
+
+        // Secondary monitor on the left (negative coordinates) at 150% DPI
+        var leftMonWorkPx = new SystemTrayManager.RECT { Left = -2880, Top = 0, Right = 0, Bottom = 1548 };
+        var leftMonCursorPx = new SystemTrayManager.POINT { X = -2875, Y = 1540 };
+        Point leftPosDip = SystemTrayManager.CalculateClampedMenuPositionDip(leftMonCursorPx, leftMonWorkPx, 1.5, 1.5, menuSize);
+        leftPosDip.X.Should().BeGreaterThanOrEqualTo(-1920 + 4);
+        (leftPosDip.X + menuSize.Width).Should().BeLessThanOrEqualTo(-4);
+        (leftPosDip.Y + menuSize.Height).Should().BeLessThanOrEqualTo(1032 - 4);
+    }
+
+    private static void SaveElementPng(FrameworkElement element, string filePath)
+    {
+        element.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+        Size size = element.DesiredSize;
+        if (size.Width <= 0 || size.Height <= 0)
+        {
+            size = new Size(316, 350);
+        }
+        element.Arrange(new Rect(0, 0, size.Width, size.Height));
+        element.UpdateLayout();
+
+        const double dpi = 192.0; // 2x crisp render
+        const double scale = dpi / 96.0;
+        int pxW = (int)Math.Ceiling(size.Width * scale);
+        int pxH = (int)Math.Ceiling(size.Height * scale);
+
+        var dv = new DrawingVisual();
+        using (var dc = dv.RenderOpen())
+        {
+            dc.DrawRectangle(new SolidColorBrush(Color.FromRgb(8, 12, 22)), null, new Rect(0, 0, size.Width, size.Height));
+            var vb = new VisualBrush(element) { Stretch = Stretch.None };
+            dc.DrawRectangle(vb, null, new Rect(0, 0, size.Width, size.Height));
+        }
+
+        var rtb = new RenderTargetBitmap(pxW, pxH, dpi, dpi, PixelFormats.Pbgra32);
+        rtb.Render(dv);
+
+        var encoder = new PngBitmapEncoder();
+        encoder.Frames.Add(BitmapFrame.Create(rtb));
+        using var fs = File.Create(filePath);
+        encoder.Save(fs);
     }
 }

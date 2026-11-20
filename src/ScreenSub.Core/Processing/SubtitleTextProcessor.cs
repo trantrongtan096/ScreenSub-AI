@@ -35,109 +35,86 @@ public static class SubtitleTextProcessor
         @"[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđÀÁẠẢÃÂẦẤẬẨẪĂẰẮẶẲẴÈÉẸẺẼÊỀẾỆỂỄÌÍỊỈĨÒÓỌỎÕÔỒỐỘỔỖƠỜỚỢỞỠÙÚỤỦŨƯỪỨỰỬỮỲÝỴỶỸĐ]",
         RegexOptions.Compiled);
 
-    private static readonly HashSet<string> CommonEnglishWords = new(StringComparer.OrdinalIgnoreCase)
-    {
-        // Full compound words that should NOT be split
-        "international", "development", "opportunity", "technology", "education",
-        "government", "environment", "information", "communication", "communities",
-        "community", "understand", "understanding", "together", "without", "within",
-        "because", "another", "everything", "something", "anything", "everyone",
-        "someone", "anyone", "throughout", "underneath", "meanwhile", "furthermore",
-        "southeast", "southwest", "northeast", "northwest", "pacific", "atlantic",
-        "american", "european", "african", "asian",
-        // Prepositions, Conjunctions & Relative Pronouns
-        "with", "across", "from", "into", "over", "upon", "under", "about", "after",
-        "before", "behind", "below", "beneath", "beside", "between", "beyond", "during",
-        "inside", "outside", "through", "toward", "towards", "against", "among", "around",
-        "along", "although", "while", "where", "which", "whose", "since", "unless",
-        "until", "whether",
-        // Common Subtitle Nouns, Verbs, Adjectives
-        "people", "world", "system", "country", "countries", "nations", "nation",
-        "region", "state", "states", "years", "time", "life", "first", "other",
-        "these", "those", "their", "there", "every", "great", "small", "large",
-        "house", "water", "place", "think", "would", "could", "should", "might",
-        "shall", "mountain", "mountains", "roads", "road", "twisted", "twisting",
-        "china", "vietnam", "america", "global", "local", "public", "social"
-    };
+    private static readonly Regex LowercaseGluedCamelCaseRegex = new(
+        @"\b(?!(?:iPhone|iPad|iPod|iMac|iOS|iCloud|macOS|eBay|mRNA|pH)\b)([a-z]{3,})([A-Z][a-zA-Z]+)\b",
+        RegexOptions.Compiled);
+
+    private static readonly string[] SafeLongRunPrepositions =
+    [
+        "across", "between", "through", "without", "within", "because", "against",
+        "towards", "toward", "during", "before", "around", "behind", "beyond",
+        "beside", "inside", "outside", "although", "whether"
+    ];
 
     /// <summary>
-    /// Intelligently restores missing word spacing and reconstructs natural sentence boundaries:
-    /// 1. Inserts spaces at CamelCase / PascalCase word boundaries (e.g. "acrossSoutheastAsia" -> "across Southeast Asia").
-    /// 2. Inserts space after punctuation followed by Latin letters (e.g. "Asia,the" -> "Asia, the").
-    /// 3. Segments concatenated all-lowercase common English compound words (e.g. "communitiesacross" -> "communities across").
-    /// 4. Preserves Chinese/CJK text without inserting spaces (and removes accidental spaces between CJK chars).
-    /// 5. Preserves Vietnamese accented letters and natural spacing.
+    /// Safely normalizes OCR word and punctuation spacing without any external dictionary dependency:
+    /// 1. Cleans accidental spaces between CJK characters and fullwidth punctuation.
+    /// 2. Inserts space after clause/sentence punctuation followed by Latin letters (preserving URLs/domains/abbreviations).
+    /// 3. Splits only unambiguous lowercase-leading glued runs (e.g. "communitiesacrossSoutheastAsia") while strictly
+    ///    preserving PascalCase brands (ScreenSubAI, DuckDB, ClickHouse, PostgreSQL, YouTube), iPhone/macOS,
+    ///    valid English words/compounds (therapist, nowhere, conductor, strait, lifeguard), proper nouns,
+    ///    Vietnamese text (with or without diacritics), and CJK text untouched.
+    /// Word spacing for small/tight Latin subtitles is preserved at the recognition stage via bicubic crop normalization.
     /// </summary>
     public static string RestoreWordSpacing(string text)
     {
         if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
-        // 1. Clean accidental spaces between CJK characters and fullwidth punctuation: "山 路 一 路 蜿 蜒 ，" -> "山路一路蜿蜒，"
-        text = Regex.Replace(text, @"(?<=[\u4e00-\u9fff\u3400-\u4dbf])\s+(?=[\u4e00-\u9fff\u3400-\u4dbf])", "");
-        text = Regex.Replace(text, @"\s+([，。！？；：、“”‘’（）《》])", "$1");
-        text = Regex.Replace(text, @"([，。！？；：、“”‘’（）《》])\s+", "$1");
+        // Process line-by-line to preserve multi-line subtitle structure (\n)
+        var rawLines = text.Replace("\r\n", "\n", StringComparison.Ordinal).Split('\n');
+        var processedLines = new List<string>(rawLines.Length);
 
-        // 2. Insert space at CamelCase/PascalCase word boundaries in Latin text:
-        // "acrossSoutheast" -> "across Southeast"
-        text = Regex.Replace(text, @"(?<=[a-z])(?=[A-Z])", " ");
-        // "USACommunity" -> "USA Community"
-        text = Regex.Replace(text, @"(?<=[A-Z])(?=[A-Z][a-z])", " ");
-
-        // 3. Insert space after punctuation if immediately followed by a letter:
-        // "Asia,the" -> "Asia, the"
-        text = Regex.Replace(text, @"([,\.\?!;:])(?=[a-zA-Z])", "$1 ");
-
-        // 4. Segment run-on lowercase English compound words:
-        // E.g. "communitiesacross" -> "communities across"
-        var tokens = text.Split(' ');
-        var reconstructed = new List<string>(tokens.Length);
-
-        foreach (var token in tokens)
+        foreach (var rawLine in rawLines)
         {
-            var match = Regex.Match(token, @"^([a-zA-Z]+)([^a-zA-Z]*)$");
-            if (match.Success)
+            string line = rawLine;
+            if (string.IsNullOrWhiteSpace(line))
             {
-                string letters = match.Groups[1].Value;
-                string punct = match.Groups[2].Value;
-                string lower = letters.ToLowerInvariant();
+                continue;
+            }
 
-                if (letters.Length >= 7 && !CommonEnglishWords.Contains(lower))
+            // 1. Clean accidental spaces between CJK characters and fullwidth punctuation: "山 路 一 路 蜿 蜒 ，" -> "山路一路蜿蜒，"
+            line = Regex.Replace(line, @"(?<=[\u4e00-\u9fff\u3400-\u4dbf])\s+(?=[\u4e00-\u9fff\u3400-\u4dbf])", "");
+            line = Regex.Replace(line, @"\s+([，。！？；：、“”‘’（）《》])", "$1");
+            line = Regex.Replace(line, @"([，。！？；：、“”‘’（）《》])\s+", "$1");
+
+            // 2. Insert space after clause/sentence punctuation if immediately followed by a letter (preserving domains/abbreviations)
+            line = Regex.Replace(line, @"([,\?!;:])(?=[a-zA-Z])", "$1 ");
+            line = Regex.Replace(line, @"(?<=[a-z]{2})\.(?=[A-Z][a-z])", ". ");
+
+            // 3. Split unambiguous lowercase-leading glued CamelCase tokens (e.g. "communitiesacrossSoutheastAsia" -> "communitiesacross Southeast Asia")
+            //    while never touching PascalCase identifiers (ScreenSubAI, DuckDB, ClickHouse, PostgreSQL, YouTube) or Apple brands (iPhone, macOS)
+            if (!VietnameseCharRegex.IsMatch(line))
+            {
+                line = LowercaseGluedCamelCaseRegex.Replace(line, m =>
                 {
-                    bool splitFound = false;
-                    for (int i = 3; i <= letters.Length - 3; i++)
-                    {
-                        string w1 = lower.Substring(0, i);
-                        string w2 = lower.Substring(i);
+                    string prefix = m.Groups[1].Value;
+                    string tail = Regex.Replace(m.Groups[2].Value, @"(?<=[a-z])(?=[A-Z][a-z])", " ");
+                    return $"{prefix} {tail}";
+                });
 
-                        if (CommonEnglishWords.Contains(w1) && CommonEnglishWords.Contains(w2))
+                // Split only ultra-long (>=14 char) all-lowercase tokens ending in a clear multi-char preposition (e.g. "communitiesacross")
+                line = Regex.Replace(line, @"\b[a-z]{14,}\b", m =>
+                {
+                    string w = m.Value;
+                    foreach (string prep in SafeLongRunPrepositions)
+                    {
+                        if (w.EndsWith(prep, StringComparison.Ordinal) && w.Length - prep.Length >= 6)
                         {
-                            string part1 = letters.Substring(0, i);
-                            string part2 = letters.Substring(i);
-                            reconstructed.Add($"{part1} {part2}{punct}");
-                            splitFound = true;
-                            break;
+                            return $"{w[..^prep.Length]} {prep}";
                         }
                     }
-
-                    if (!splitFound)
-                    {
-                        reconstructed.Add(token);
-                    }
-                }
-                else
-                {
-                    reconstructed.Add(token);
-                }
+                    return w;
+                });
             }
-            else
+
+            line = Regex.Replace(line, @"[ ]{2,}", " ").Trim();
+            if (line.Length > 0)
             {
-                reconstructed.Add(token);
+                processedLines.Add(line);
             }
         }
 
-        string result = string.Join(" ", reconstructed);
-        result = Regex.Replace(result, @"[ ]{2,}", " ");
-        return result.Trim();
+        return string.Join("\n", processedLines);
     }
 
     /// <summary>

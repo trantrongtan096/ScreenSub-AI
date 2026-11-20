@@ -4,9 +4,16 @@ Tất cả các thay đổi đáng chú ý của dự án **ScreenSub AI** qua t
 
 ---
 
-## [1.0.0-beta.2] - 2026-11-18
+## [1.0.0-beta.2] - 2026-11-20
 
 ### Tính Năng Mới & Củng Cố Độ Tin Cậy (Release Hardening)
+- **Tái Thiết Kế System Tray Context Menu (Fluent Dark Mode):**
+  - Loại bỏ hoàn toàn dải trắng bên trái bằng custom WPF `ControlTemplate` (`TrayContextMenuStyle`, `TrayMenuItemStyle`, `TraySeparatorStyle` trong `Theme.xaml`), bảng màu Fluent Dark (`#0F172A`, hover `#1E293B`, border `#334155`), header tùy chỉnh không dùng `MenuItem` disabled với badge trạng thái động (`Đã dừng / Đang dịch / Tạm dừng`), vector icons 17–18px căn thẳng hàng, phím tắt `Ctrl+Alt+Q` căn phải và tự động định vị chống cắt mép trên DPI `100%–200%` & đa màn hình.
+- **Sửa Lỗi Mất Khoảng Trắng OCR Tiếng Anh (RapidOCR Bicubic Small-Crop Enhancement, Không Dùng Từ Điển Bên Ngoài):**
+  - Bổ sung chuẩn hóa bicubic cho crop dòng chữ nhỏ (`4 <= height < 38px -> 48px`) trong `workers/paddle-ocr/ocr_worker.py` để giữ khe khoảng trắng sắc nét trước khi giải mã CTC và bỏ regex tách CamelCase mù làm hỏng thương hiệu (`YouTube`, `iPhone`, `ScreenSubAI`, `PostgreSQL`).
+  - Qua thực nghiệm A/B/C trên tập 80 ảnh độc lập chưa tinh chỉnh, giải pháp crop enhancement thuần (`Config B`) đạt `EN Exact = 96,2%` (`WB F1 = 99,64%`, `WER = 0,65%`, giảm `MissSp` `112 -> 2`), vượt trội và an toàn hơn tách từ dựa trên từ điển (`Config C`: `1` giúp vs `4` làm hỏng), đạt `0%` false-correction và không nhúng bất kỳ từ điển bên thứ ba nào vào bộ cài.
+- **Vá Lỗi Chuyển Chế Độ Động `ScreenOcr -> AudioRealtime / Hybrid` (`SubtitleCoordinator.Start()`):**
+  - Tự động khởi tạo `_speechService` và `_speechWorkerTask` khi resume từ `Paused` sang `AudioRealtime`/`Hybrid` mà luồng Speech chưa được khởi chạy (kiểm chứng qua 30 lần đổi chế độ trong bài Soak Test liên tục 60 phút).
 - **Multi-Model Offline Translation Router & Rollback An Toàn:**
   - Hỗ trợ định tuyến **VietAI EnViT5 (`envit5_ct2_int8`)** cho cặp hội thoại `EN ↔ VI` và **Facebook M2M-100 (`m2m100_418m_ct2`)** cho `ZH ↔ VI`, `EN ↔ ZH` cùng cơ chế fallback tự động khi thiếu model chuyên biệt.
 - **Tối Ưu Hóa Whisper.net (`ggml-base.bin`) & Audio Realtime:**
@@ -17,10 +24,11 @@ Tất cả các thay đổi đáng chú ý của dự án **ScreenSub AI** qua t
   - Bổ sung kiểm tra độ mới của OCR (`_lastOcrSeenTimeUtc <= 4.500 ms`), kiểm tra cực phủ định (`不/没/not/never/don't...`), khớp số đếm/thời gian (`三点` vs `四点`, `8:00` vs `9:00`), từ trái nghĩa hành động (`打开` vs `关闭`, `turn on` vs `turn off`, `lock` vs `unlock`), bảo vệ tên người/địa danh (`北京` vs `南京`, `小王` vs `小张`, `Smith` vs `Jones`), và chuẩn hóa chữ Hán Phồn ↔ Giản qua Win32 `LCMapStringEx`.
 - **Windows Installer (`v1.0.0-beta.2`) & Sửa Lỗi P0 `InitializeSetup()`:**
   - Khắc phục lỗi mở rộng hằng `{app}` sớm trong `ScreenSubAI_Setup.iss`.
-  - Tách phiên bản bộ cài mới `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (~50,18 MB, `.NET 10 Self-Contained`), bảo toàn bản `v1.0.0-beta.1` (`50,17 MB`, SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`) để rollback.
+  - Tách phiên bản bộ cài mới `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (~50,2 MB, `.NET 10 Self-Contained`), bảo toàn bản `v1.0.0-beta.1` (`50,17 MB`, SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`) để rollback.
 
 ### Thử Nghiệm & Chất Lượng
-- Đạt **242 / 242 bài kiểm thử tự động vượt qua (100% PASS, 0 Skipped trên máy đầy đủ phần cứng/model)**: **161 Unit Tests + 81 Integration Tests**.
+- Đạt **271 / 271 bài kiểm thử tự động vượt qua (100% PASS, 0 Failed, 0 Skipped trên máy đầy đủ phần cứng/model)**: **188 Unit Tests + 83 Integration Tests**.
+- Hoàn tất **Soak Test liên tục 60 phút (`60,01` phút)** trên `ScreenSub.Desktop.exe` thật cùng `RapidOCR`, `CTranslate2` (`EnViT5` + `M2M-100`) và `Whisper Base`: `0` crash, `0` worker restart, `0` timeout, `0` GDI/Handle leak.
 - Toàn bộ bài kiểm thử phần cứng dùng `[HardwareFact]` (báo `SKIPPED` kèm lý do rõ ràng nếu thiếu thiết bị/model, không bao giờ báo `PASS` giả).
 
 ---
