@@ -3,7 +3,7 @@
 Tài liệu nghiệm thu thực tế trên **Windows sạch (Clean VM)** và **Windows Desktop GUI thật** trước khi nâng từ **Controlled Beta** lên phát hành **Wide Beta**.
 
 > **Ghi chú đã tự động kiểm chứng thực tế trên máy phát triển (`SessionId=1`):**  
-> - **Bộ cài Installer thật (`/CURRENTUSER` Install `beta.1` -> Upgrade `beta.2` -> Launch App -> Uninstall):** **PASS trên host** (`exit=0`, giữ nguyên `92->92` file Models, `OrphanPy=0`, sạch hoàn toàn không chứa `EnglishWordSegmenter` hay `english_lexicon.txt`). Bản phát hành mới **`ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe`** (`50.19 MB` / `52.629.256 bytes`, SHA-256 `2712F76D0690E6A99126DD274887AE0824B7186C497F0B4DD02BD8822E32BB09`) giữ song song bản rollback `v1.0.0-beta.1` (`1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`). *Còn `PENDING` trên VM sạch hoàn toàn chưa cài Python/VC++.*
+> - **Bộ cài Installer thật (`/CURRENTUSER` Install `beta.1` -> Upgrade `beta.2` -> Launch App -> Uninstall):** **PASS trên host** (`exit=0`, giữ nguyên `92->92` file Models, `OrphanPy=0`, sạch hoàn toàn không chứa `EnglishWordSegmenter` hay `english_lexicon.txt`). Bản phát hành mới **`ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe`** (`50.18 MB` / `52.622.089 bytes`, SHA-256 `9EEF3FE1179733AF8CFBB1005E7EA8B29C9D472F7026709CCB031834B2BB846B`) giữ song song bản rollback `v1.0.0-beta.1` (`1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`). *Còn `PENDING` trên VM sạch hoàn toàn chưa cài Python/VC++.*
 > - **Real Edge Player Window (`msedge.exe` EN + ZH) -> `PrintWindow` -> OCR -> EnViT5/M2M-100 -> `SubtitleOverlayWindow` -> Pause/Resume/Stop:** **PASS** (`cap=13–19 ms`, `ov=1 ms`, `P50=344 ms`).  
 > - **Real Multi-Speaker Neural Audio (EN `Ava/Andrew/Emma/Brian` & ZH `晓晓/云希/曉臻/雲哲`) -> Loa phần cứng `'Speakers (Realtek(R) Audio)'` -> WASAPI Loopback -> EnergyVAD -> Whisper.net (`ggml-base.bin`) -> EnViT5/M2M-100 -> Overlay & Semantic-Safe Hybrid Mode (EN + ZH, `0% FP / 0% FN`) & Concurrency:** **PASS** (EN `AvgWER = 8,57%`, `Whisper P50 = 671 ms`; ZH `SimpNormCER = 4,68%`, `LangAcc = 100%`, `Whisper P50 = 678 ms`; Concurrency `CacheHitRate = 0%`, `SpeechQueueWait P50/P95 = 0/2 ms`, `TotalNormalizedCpu = 13,2%`).
 > - **Overlay Win32 ExStyle & Handle Stability (50 lần cập nhật):** **PASS** (`ExStyle=0x080801A8`, `GDI 18->18`, `USER 29->29`, `Update P50/P95 = 1 ms`).  
@@ -18,7 +18,7 @@ Tài liệu nghiệm thu thực tế trên **Windows sạch (Clean VM)** và **W
 Chạy trên máy ảo hoặc máy Windows 10/11 x64 chưa cài .NET SDK, chưa cài Python dev tool:
 
 1. **Cài đặt với tài khoản chuẩn (Standard Non-Admin User):**
-   - Chạy `ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50,19 MB`, SHA-256: `2712F76D0690E6A99126DD274887AE0824B7186C497F0B4DD02BD8822E32BB09`, `PrivilegesRequired=lowest`; bản rollback `v1.0.0-beta.1` SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`).
+   - Chạy `ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50,18 MB`, SHA-256: `9EEF3FE1179733AF8CFBB1005E7EA8B29C9D472F7026709CCB031834B2BB846B`, `PrivilegesRequired=lowest`; bản rollback `v1.0.0-beta.1` SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`).
    - Xác nhận hiển thị license bên thứ ba (`THIRD_PARTY_LICENSES.txt`, gồm MIT, Apache-2.0, BigScience OpenRAIL-M).
    - Cài đặt thành công vào `%LocalAppData%\Programs\ScreenSub AI` mà không bắt buộc quyền Administrator.
 2. **Kiểm tra `.NET 10 Self-Contained` & `VC++ Runtime`:**

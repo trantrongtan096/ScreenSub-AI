@@ -54,7 +54,7 @@
 - [LiveHardwareE2ETests.cs](../tests/IntegrationTests/LiveHardwareE2ETests.cs), [WhisperAuditBenchmarkTests.cs](../tests/IntegrationTests/WhisperAuditBenchmarkTests.cs), [RealWorldAudioAndConcurrencyTests.cs](../tests/IntegrationTests/RealWorldAudioAndConcurrencyTests.cs) & [FrameChangeAndRetrySafetyTests.cs](../tests/IntegrationTests/FrameChangeAndRetrySafetyTests.cs).
 - [README.md](../README.md), [INSTALL.md](INSTALL.md), [CHANGELOG.md](CHANGELOG.md), [KNOWN_ISSUES.md](KNOWN_ISSUES.md), [MODEL_GUIDE.md](MODEL_GUIDE.md), [BETA_DESKTOP_QA_CHECKLIST.md](BETA_DESKTOP_QA_CHECKLIST.md) & [BETA_RC_VALIDATION_REPORT.md](BETA_RC_VALIDATION_REPORT.md).
 - Bộ cài phát hành song song trong `dist/`:
-  - **Bản mới (`v1.0.0-beta.2`, license-clean, không chứa `EnglishWordSegmenter` hay `english_lexicon.txt`):** `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50.19 MB` / `52.629.256 bytes`, SHA-256 `2712F76D0690E6A99126DD274887AE0824B7186C497F0B4DD02BD8822E32BB09`).
+  - **Bản mới (`v1.0.0-beta.2`, license-clean, không chứa `EnglishWordSegmenter` hay `english_lexicon.txt`, kèm bản vá Maximize/DPI):** `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (`50.18 MB` / `52.622.089 bytes`, SHA-256 `9EEF3FE1179733AF8CFBB1005E7EA8B29C9D472F7026709CCB031834B2BB846B`).
   - **Bản rollback (`v1.0.0-beta.1`):** `dist/ScreenSubAI_v1.0.0-beta.1_Setup_x64.exe` (`50.17 MB` / `52.607.228 bytes`, SHA-256 `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`).
 
 ---
@@ -133,8 +133,8 @@
 
 | # | Release Gate | Trạng thái | Chi tiết |
 |---:|---|:---:|---|
-| 1 | Installer `v1.0.0-beta.2` + Upgrade từ `beta.1` + Uninstall trên host | **PASS** | `beta.2` (`50.19 MB` / `52.629.256 bytes`, `2712F76D0690E6A99126DD274887AE0824B7186C497F0B4DD02BD8822E32BB09`, sạch hoàn toàn không có `EnglishWordSegmenter` hay `english_lexicon.txt`) giữ song song `beta.1` (`1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`); Upgrade & Uninstall `exit=0`, giữ `92->92` file Models, `OrphanPy=0` |
-| 2 | Release Build + `188 Unit` + `83 Integration` (`271` tổng) | **PASS** | `0 Warning, 0 Error`; `188/188 UnitTests`, `83/83 IntegrationTests` (`0 Failed, 0 Skipped` trên phần cứng thật) |
+| 1 | Installer `v1.0.0-beta.2` + Upgrade từ `beta.1` + Uninstall trên host | **PASS** | `beta.2` (`50.18 MB` / `52.622.089 bytes`, `9EEF3FE1179733AF8CFBB1005E7EA8B29C9D472F7026709CCB031834B2BB846B`, sạch hoàn toàn không có `EnglishWordSegmenter` hay `english_lexicon.txt`, gồm bản vá Maximize/DPI) giữ song song `beta.1` (`1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`); Upgrade & Uninstall `exit=0`, giữ `92->92` file Models, `OrphanPy=0` |
+| 2 | Release Build + `188 Unit` + `84 Integration` (`272` tổng) | **PASS** | `0 Warning, 0 Error`; `188/188 UnitTests`, `84/84 IntegrationTests` (gồm test `MainWindow_MaximizeAndResponsiveLayout`, `0 Failed, 0 Skipped`) |
 | 3 | Live Edge Window -> OCR -> EnViT5 -> Overlay E2E | **PASS** | Chạy thực tế trên `msedge.exe` + `SubtitleOverlayWindow` |
 | 4 | Hardware WASAPI Loopback + VAD | **PASS** | Thu loopback sạch từ `Speakers (Realtek(R) Audio)` (`MaxPeak = 0,1407`) |
 | 5 | Whisper (`ggml-base.bin`) EN + ZH (`zh-CN`/`zh-TW`) + Semantic-Safe Hybrid + Concurrency | **PASS** | EN `Whisper P50 = 671 ms` (`AvgWER = 8,57%`), ZH `Whisper P50 = 678 ms` (`SimpNormCER = 4,68%`, `LangAcc = 100%`), Concurrency `CacheHit = 0%`, Hybrid Semantic Safety `0% FP / 0% FN` |

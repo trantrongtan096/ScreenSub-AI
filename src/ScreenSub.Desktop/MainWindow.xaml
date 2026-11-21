@@ -7,8 +7,8 @@
         xmlns:enums="clr-namespace:ScreenSub.Core.Enums;assembly=ScreenSub.Core"
         mc:Ignorable="d"
         Title="ScreenSub AI — Realtime Subtitle Translator"
-        Height="840" Width="1380"
-        MinHeight="720" MinWidth="1180"
+        Height="800" Width="1340"
+        MinHeight="600" MinWidth="1024"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BgDark}"
         Foreground="{StaticResource TextPrimary}"
@@ -92,7 +92,7 @@
         </Style>
     </Window.Resources>
 
-    <Grid>
+    <Grid x:Name="RootLayoutGrid" Background="{StaticResource BgDark}">
         <Grid.RowDefinitions>
             <!-- Custom Title Bar -->
             <RowDefinition Height="44" />
@@ -138,7 +138,7 @@
                         <TextBlock Text="—" FontSize="11" />
                     </Button>
                     <Button Style="{StaticResource TitleBarButton}" Click="OnMaximizeClick" ToolTip="Phóng to / Khôi phục">
-                        <TextBlock Text="▢" FontSize="13" />
+                        <TextBlock x:Name="MaximizeButtonGlyph" Text="▢" FontSize="13" />
                     </Button>
                     <Button Style="{StaticResource TitleBarCloseButton}" Click="OnCloseClick" ToolTip="Đóng">
                         <TextBlock Text="✕" FontSize="12" />
@@ -151,21 +151,22 @@
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
                 <!-- Sidebar -->
-                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="206" />
                 <!-- Content View -->
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
 
             <!-- ================= SIDEBAR ================= -->
             <Border Grid.Column="0" Background="{StaticResource BgSidebar}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="0,0,1,0">
-                <Grid Margin="12,16,12,16">
+                <Grid Margin="10,14,10,14">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="*" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!-- Nav Buttons -->
-                    <StackPanel Grid.Row="0">
+                    <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <StackPanel>
                         <!-- Dashboard Button -->
                         <Border CornerRadius="10" Margin="0,0,0,6">
                             <Border.Style>
@@ -238,7 +239,8 @@
                                 </StackPanel>
                             </Button>
                         </Border>
-                    </StackPanel>
+                        </StackPanel>
+                    </ScrollViewer>
 
                     <!-- Bottom Status Card in Sidebar -->
                     <Border Grid.Row="1" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="12" Padding="14,12" ToolTip="{Binding DiagnosticsTooltipText}">
@@ -268,37 +270,51 @@
             </Border>
 
             <!-- ================= MAIN CONTENT VIEW ================= -->
-            <Grid Grid.Column="1" Margin="22,18,22,18">
+            <Grid Grid.Column="1" Margin="18,12,18,14">
                 <Grid.RowDefinitions>
-                    <!-- Header with Title & Top 3 Status Badges -->
+                    <!-- Header with Title & Top Status Badges -->
                     <RowDefinition Height="Auto" />
                     <!-- Content Area -->
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <!-- Header Row -->
-                <Grid Grid.Row="0" Margin="0,0,0,16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+                <!-- Header Row (2-row responsive layout: zero title/KPI collision at any width or DPI) -->
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
 
-                    <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                        <TextBlock Text="Dashboard" FontSize="24" FontWeight="Bold" Foreground="#FFFFFF" />
-                        <TextBlock Text="Theo dõi, nhận diện và dịch phụ đề màn hình đa ngôn ngữ thời gian thực." Foreground="{StaticResource TextSecondary}" FontSize="13" Margin="0,3,0,0" />
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,10">
+                        <TextBlock Text="Dashboard" FontSize="22" FontWeight="Bold" Foreground="#FFFFFF" VerticalAlignment="Center" Margin="0,0,14,0" />
+                        <TextBlock Text="Theo dõi, nhận diện và dịch phụ đề màn hình đa ngôn ngữ thời gian thực."
+                                   Foreground="{StaticResource TextSecondary}" FontSize="12.5" VerticalAlignment="Center"
+                                   TextTrimming="CharacterEllipsis" />
                     </StackPanel>
 
-                    <!-- Top System Status Cards -->
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Top System Status Cards (Proportional 5-column responsive bar with ellipsis & tooltip) -->
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="1.25*" />
+                            <ColumnDefinition Width="0.95*" />
+                            <ColumnDefinition Width="1.15*" />
+                            <ColumnDefinition Width="1.35*" />
+                            <ColumnDefinition Width="0.80*" />
+                        </Grid.ColumnDefinitions>
+
                         <!-- Card 0: AI Provider Badge (Phase 9) -->
-                        <Border Style="{StaticResource StatusCardBorder}" Margin="0,0,10,0" MinWidth="155">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28" Height="28" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBlock Text="⚡" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+                        <Border Grid.Column="0" Style="{StaticResource StatusCardBorder}" Padding="10,7" Margin="0,0,8,0" ToolTip="{Binding ActiveProviderBadgeText}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="26" Height="26" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
+                                    <TextBlock Text="⚡" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5" />
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ĐỘNG CƠ AI" Foreground="{StaticResource TextMuted}" FontSize="10.5" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding ActiveProviderBadgeText}" FontSize="11" FontWeight="Bold" Margin="0,1,0,0">
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="ĐỘNG CƠ AI" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding ActiveProviderBadgeText}" FontSize="11" FontWeight="Bold" Margin="0,1,0,0" TextTrimming="CharacterEllipsis">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock">
                                                 <Setter Property="Foreground" Value="#38BDF8" />
@@ -311,47 +327,63 @@
                                         </TextBlock.Style>
                                     </TextBlock>
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Card 0B: Quick Translate Hotkey Badge (Phase 11) -->
-                        <Border Style="{StaticResource StatusCardBorder}" Margin="0,0,10,0" MinWidth="140">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28" Height="28" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBlock Text="🚀" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+                        <Border Grid.Column="1" Style="{StaticResource StatusCardBorder}" Padding="10,7" Margin="0,0,8,0" ToolTip="{Binding HotkeyDisplayText}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="26" Height="26" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
+                                    <TextBlock Text="🚀" Foreground="#38BDF8" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5" />
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="QUICK TRANSLATE" Foreground="{StaticResource TextMuted}" FontSize="10.5" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding HotkeyDisplayText}" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,1,0,0" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="QUICK TRANSLATE" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding HotkeyDisplayText}" Foreground="#38BDF8" FontSize="11.5" FontWeight="Bold" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Card 1: OCR Badge -->
-                        <Border Style="{StaticResource StatusCardBorder}" Margin="0,0,10,0" MinWidth="130">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28" Height="28" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBlock Text="🖥" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+                        <Border Grid.Column="2" Style="{StaticResource StatusCardBorder}" Padding="10,7" Margin="0,0,8,0" ToolTip="{Binding OcrStatusText}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="26" Height="26" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
+                                    <TextBlock Text="🖥" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5" />
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="OCR ENGINE" Foreground="{StaticResource TextMuted}" FontSize="10.5" FontWeight="Bold" />
-                                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
-                                        <Ellipse Width="6" Height="6" Fill="{StaticResource AccentGreen}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding OcrStatusText}" Foreground="{StaticResource AccentGreen}" FontSize="12" FontWeight="SemiBold" />
-                                    </StackPanel>
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="OCR ENGINE" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold" />
+                                    <Grid Margin="0,1,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Grid.Column="0" Width="6" Height="6" Fill="{StaticResource AccentGreen}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                                        <TextBlock Grid.Column="1" Text="{Binding OcrStatusText}" Foreground="{StaticResource AccentGreen}" FontSize="11.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    </Grid>
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Card 2: Translation Badge -->
-                        <Border Style="{StaticResource StatusCardBorder}" Margin="0,0,10,0" MinWidth="145">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28" Height="28" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBlock Text="文" Foreground="#A5B4FC" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" FontWeight="Bold" />
+                        <Border Grid.Column="3" Style="{StaticResource StatusCardBorder}" Padding="10,7" Margin="0,0,8,0" ToolTip="{Binding TranslationStatusText}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="26" Height="26" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
+                                    <TextBlock Text="文" Foreground="#A5B4FC" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5" FontWeight="Bold" />
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="DỊCH THUẬT" Foreground="{StaticResource TextMuted}" FontSize="10.5" FontWeight="Bold" />
+                                        <TextBlock Text="DỊCH THUẬT" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold" />
                                         <Border CornerRadius="3" Padding="4,1" Margin="6,0,0,0" Background="#78350F" BorderBrush="{StaticResource AccentAmber}" BorderThickness="1">
                                             <Border.Style>
                                                 <Style TargetType="Border">
@@ -366,8 +398,12 @@
                                             <TextBlock Text="DEMO" Foreground="#FDE68A" FontSize="9" FontWeight="Bold" />
                                         </Border>
                                     </StackPanel>
-                                    <StackPanel Orientation="Horizontal" Margin="0,1,0,0">
-                                        <Ellipse Width="6" Height="6" Margin="0,0,4,0" VerticalAlignment="Center">
+                                    <Grid Margin="0,1,0,0">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Ellipse Grid.Column="0" Width="6" Height="6" Margin="0,0,4,0" VerticalAlignment="Center">
                                             <Ellipse.Style>
                                                 <Style TargetType="Ellipse">
                                                     <Setter Property="Fill" Value="{StaticResource AccentGreen}" />
@@ -379,7 +415,7 @@
                                                 </Style>
                                             </Ellipse.Style>
                                         </Ellipse>
-                                        <TextBlock Text="{Binding TranslationStatusText}" FontSize="12" FontWeight="SemiBold">
+                                        <TextBlock Grid.Column="1" Text="{Binding TranslationStatusText}" FontSize="11.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis">
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Setter Property="Foreground" Value="{StaticResource AccentGreen}" />
@@ -391,24 +427,28 @@
                                                 </Style>
                                             </TextBlock.Style>
                                         </TextBlock>
-                                    </StackPanel>
+                                    </Grid>
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Border>
 
                         <!-- Card 3: Latency Badge -->
-                        <Border Style="{StaticResource StatusCardBorder}" MinWidth="130" ToolTip="{Binding DiagnosticsTooltipText}">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Width="28" Height="28" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
-                                    <TextBlock Text="⏱" Foreground="#93C5FD" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="13" />
+                        <Border Grid.Column="4" Style="{StaticResource StatusCardBorder}" Padding="10,7" ToolTip="{Binding DiagnosticsTooltipText}">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Border Grid.Column="0" Width="26" Height="26" Background="{StaticResource BgCardElevated}" CornerRadius="6" Margin="0,0,8,0">
+                                    <TextBlock Text="⏱" Foreground="#93C5FD" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12.5" />
                                 </Border>
-                                <StackPanel VerticalAlignment="Center">
-                                    <TextBlock Text="ĐỘ TRỄ (TB)" Foreground="{StaticResource TextMuted}" FontSize="10.5" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding FormattedLatencyText}" Foreground="#FFFFFF" FontSize="12.5" FontWeight="SemiBold" Margin="0,1,0,0" />
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="ĐỘ TRỄ (TB)" Foreground="{StaticResource TextMuted}" FontSize="10" FontWeight="Bold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding FormattedLatencyText}" Foreground="#FFFFFF" FontSize="12" FontWeight="SemiBold" Margin="0,1,0,0" TextTrimming="CharacterEllipsis" />
                                 </StackPanel>
-                            </StackPanel>
+                            </Grid>
                         </Border>
-                    </StackPanel>
+                    </Grid>
                 </Grid>
 
                 <!-- ================= TAB 1: DASHBOARD MAIN CONTENT ================= -->
@@ -462,17 +502,17 @@
                     <!-- 3-Column Dashboard Content -->
                     <Grid Grid.Row="1">
                         <Grid.ColumnDefinitions>
-                            <!-- Column 0: Translation Controls (Width 305) -->
-                            <ColumnDefinition Width="305" MinWidth="275" />
+                            <!-- Column 0: Translation Controls -->
+                            <ColumnDefinition Width="312" MinWidth="288" />
                             <!-- Column 1: Center Live Preview & Results (Flexible) -->
-                            <ColumnDefinition Width="*" MinWidth="440" />
-                            <!-- Column 2: Overlay Settings (Width 295) -->
-                            <ColumnDefinition Width="295" MinWidth="265" />
+                            <ColumnDefinition Width="*" MinWidth="360" />
+                            <!-- Column 2: Overlay Settings -->
+                            <ColumnDefinition Width="292" MinWidth="268" />
                         </Grid.ColumnDefinitions>
 
                     <!-- ================= LEFT COLUMN: TRANSLATION CONTROLS ================= -->
-                    <Border Grid.Column="0" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="16" Margin="0,0,14,0">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <Border Grid.Column="0" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,12,0">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <StackPanel Margin="0,0,4,0">
                                 <!-- Card Header -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
@@ -481,35 +521,35 @@
                                 </StackPanel>
 
                                 <!-- Action Buttons: Start, Pause, Stop with distinct hover feedback -->
-                                <Grid Margin="0,0,0,16">
+                                <Grid Margin="0,0,0,14">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="1.7*" />
-                                        <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="1.42*" />
+                                        <ColumnDefinition Width="1.15*" />
+                                        <ColumnDefinition Width="0.88*" />
                                     </Grid.ColumnDefinitions>
 
                                     <!-- Start Button -->
                                     <Button Grid.Column="0" Command="{Binding StartTranslationCommand}"
                                             Style="{StaticResource GreenActionButton}"
-                                            Margin="0,0,6,0" ToolTip="Bắt đầu nhận diện và dịch">
+                                            Padding="6,0" Margin="0,0,5,0" ToolTip="Bắt đầu nhận diện và dịch">
                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                            <TextBlock Text="▶ " Foreground="#FFFFFF" FontSize="12.5" VerticalAlignment="Center" />
-                                            <TextBlock Text="Bắt đầu dịch" Foreground="#FFFFFF" FontWeight="Bold" FontSize="12.5" VerticalAlignment="Center" />
+                                            <TextBlock Text="▶ " Foreground="#FFFFFF" FontSize="11.5" VerticalAlignment="Center" />
+                                            <TextBlock Text="Bắt đầu dịch" Foreground="#FFFFFF" FontWeight="Bold" FontSize="11.5" VerticalAlignment="Center" />
                                         </StackPanel>
                                     </Button>
 
                                     <!-- Pause Button -->
                                     <Button Grid.Column="1" Command="{Binding PauseTranslationCommand}"
                                             Style="{StaticResource SecondaryDarkButton}"
-                                            Height="40" Margin="0,0,6,0" ToolTip="Tạm dừng nhận diện">
-                                        <TextBlock Text="⏸ Tạm dừng" FontSize="11.5" />
+                                            Height="40" Padding="4,0" Margin="0,0,5,0" ToolTip="Tạm dừng nhận diện">
+                                        <TextBlock Text="⏸ Tạm dừng" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Button>
 
                                     <!-- Stop Button -->
                                     <Button Grid.Column="2" Command="{Binding StopTranslationCommand}"
                                             Style="{StaticResource StopDangerButton}"
-                                            Height="40" ToolTip="Dừng và xóa phụ đề">
-                                        <TextBlock Text="⏹ Dừng" FontSize="11.5" />
+                                            Height="40" Padding="4,0" ToolTip="Dừng và xóa phụ đề">
+                                        <TextBlock Text="⏹ Dừng" FontSize="11" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Button>
                                 </Grid>
 
@@ -678,11 +718,14 @@
                                     </Button>
 
                                     <!-- Quick Translate Mode Quick Toggle -->
-                                    <CheckBox Content="Tự động dịch ngay sau khi chọn (Quick Translate)"
-                                              IsChecked="{Binding QuickTranslateMode}"
+                                    <CheckBox IsChecked="{Binding QuickTranslateMode}"
                                               Foreground="{StaticResource TextSecondary}"
-                                              FontSize="11.5" Margin="2,0,0,6"
-                                              ToolTip="Khi bật, sau khi thả chuột chọn vùng phụ đề, ứng dụng tự động dịch ngay lập tức mà không cần nhấn Bắt đầu dịch." />
+                                              FontSize="11.5" Margin="2,2,0,6"
+                                              VerticalContentAlignment="Top"
+                                              ToolTip="Khi bật, sau khi thả chuột chọn vùng phụ đề, ứng dụng tự động dịch ngay lập tức mà không cần nhấn Bắt đầu dịch.">
+                                        <TextBlock Text="Tự động dịch ngay sau khi chọn (Quick Translate)"
+                                                   TextWrapping="Wrap" />
+                                    </CheckBox>
 
                                     <!-- Button: Xóa vùng đã chọn -->
                                     <Button Command="{Binding ClearRegionCommand}"
@@ -769,16 +812,16 @@
                     </Border>
 
                     <!-- ================= CENTER PANEL: LIVE PREVIEW & RESULTS ================= -->
-                    <Grid Grid.Column="1" Margin="0,0,14,0">
+                    <Grid Grid.Column="1" Margin="0,0,12,0">
                         <Grid.RowDefinitions>
-                            <!-- Live Preview Card (Flexible 1.35*) -->
-                            <RowDefinition Height="1.35*" />
+                            <!-- Live Preview Card (Flexible 1.25*) -->
+                            <RowDefinition Height="1.25*" />
                             <!-- Realtime Results Card (1.0*) -->
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
 
                         <!-- Card 1: Live Preview (Video Monitoring Panel) -->
-                        <Border Grid.Row="0" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="16" Margin="0,0,0,14">
+                        <Border Grid.Row="0" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="14" Margin="0,0,0,12">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -979,10 +1022,10 @@
                                 </Grid>
 
                                 <!-- Results Rows -->
-                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                    <StackPanel VerticalAlignment="Center">
+                                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                    <StackPanel VerticalAlignment="Top" Margin="0,0,4,0">
                                         <!-- Row 1: Original Text -->
-                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10">
+                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,8">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
                                                     <ColumnDefinition Width="Auto" />
@@ -998,7 +1041,7 @@
                                         </Border>
 
                                         <!-- Row 2: English Translation (Shown when needed and not redundant) -->
-                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10"
+                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,8"
                                                 Visibility="{Binding ShowEnglishTranslationRow, Converter={StaticResource BoolToVis}}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -1015,7 +1058,7 @@
                                         </Border>
 
                                         <!-- Row 3: Chinese Translation (Shown when needed and not redundant) -->
-                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="14,10" Margin="0,0,0,10"
+                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="12,8" Margin="0,0,0,8"
                                                 Visibility="{Binding ShowChineseTranslationRow, Converter={StaticResource BoolToVis}}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -1032,7 +1075,7 @@
                                         </Border>
 
                                         <!-- Row 4: Vietnamese Translation (Shown when needed and not redundant) -->
-                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="14,10"
+                                        <Border Background="{StaticResource BgCardElevated}" BorderBrush="#27354F" BorderThickness="1" CornerRadius="10" Padding="12,8"
                                                 Visibility="{Binding ShowVietnameseTranslationRow, Converter={StaticResource BoolToVis}}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions>
@@ -1054,9 +1097,9 @@
                     </Grid>
 
                     <!-- ================= RIGHT COLUMN: OVERLAY SETTINGS ================= -->
-                    <Border Grid.Column="2" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="16">
-                        <ScrollViewer VerticalScrollBarVisibility="Auto">
-                            <StackPanel Margin="0,0,4,0">
+                    <Border Grid.Column="2" Background="{StaticResource BgCard}" BorderBrush="{StaticResource BorderBrushDark}" BorderThickness="1" CornerRadius="14" Padding="14">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel Margin="0,0,4,4">
                                 <!-- Card Header -->
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,14">
                                     <TextBlock Text="🗂" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center" />
@@ -1187,7 +1230,7 @@
                                         ToolTip="Hiển thị thử một phụ đề mẫu [TEST] trên Overlay để kiểm tra vị trí, font và DPI">
                                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                         <TextBlock Text="🧪 " FontSize="13" VerticalAlignment="Center" />
-                                        <TextBlock Text="Kiểm tra hiển thị Overlay (Test Overlay)" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
+                                        <TextBlock Text="Kiểm tra hiển thị Overlay" Foreground="{StaticResource TextPrimary}" FontWeight="SemiBold" FontSize="12" VerticalAlignment="Center" />
                                     </StackPanel>
                                 </Button>
                             </StackPanel>

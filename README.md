@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/Release-v1.0.0--beta.2-blue.svg)](https://github.com/trantrongtan096/ScreenSub-AI)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20x64-brightgreen.svg)](https://microsoft.com/windows)
 [![.NET](https://img.shields.io/badge/.NET-10.0%20WPF-purple.svg)](https://dotnet.microsoft.com/)
-[![Tests](https://img.shields.io/badge/Tests-271%2F271%20Passing-success.svg)](docs/BETA_RC_VALIDATION_REPORT.md)
+[![Tests](https://img.shields.io/badge/Tests-272%2F272%20Passing-success.svg)](docs/BETA_RC_VALIDATION_REPORT.md)
 [![License](https://img.shields.io/badge/License-MIT-lightgrey.svg)](LICENSE)
 
 ![ScreenSub AI](docs/dashboard-preview.jpg)
@@ -118,7 +118,7 @@ ScreenSubAI/
 ├── test_assets/                  # Sample audio WAV & test images for automated testing
 ├── tests/
 │   ├── UnitTests/                # 188 Unit tests (xUnit, FluentAssertions)
-│   ├── IntegrationTests/         # 83 Integration & Hardware E2E tests (Explicit HardwareFact skip/verify)
+│   ├── IntegrationTests/         # 84 Integration & Hardware E2E tests (Explicit HardwareFact skip/verify)
 │   ├── benchmark_30_sentences_6_directions.py # 30-sentence benchmark suite
 │   ├── quality_evaluation_suite.py            # 8-category translation quality audit
 │   └── stability_soak_test.py                 # 100-cycle OCR & 50-cycle Translation soak test
@@ -155,7 +155,7 @@ ScreenSubAI/
 dotnet build ScreenSubAI.slnx -c Release
 ```
 
-### 2. Chạy kiểm thử tự động (271/271 Tests Passed)
+### 2. Chạy kiểm thử tự động (272/272 Tests Passed)
 
 ```powershell
 dotnet test ScreenSubAI.slnx -c Release
@@ -164,8 +164,8 @@ dotnet test ScreenSubAI.slnx -c Release
 Kết quả trên máy đầy đủ môi trường phần cứng & mô hình cục bộ:
 ```text
 Passed! - UnitTests.dll (188 tests, 0 failed, 0 skipped)
-Passed! - IntegrationTests.dll (83 tests, 0 failed, 0 skipped)
-Total: 271 passed, 0 failed, 0 skipped.
+Passed! - IntegrationTests.dll (84 tests, 0 failed, 0 skipped)
+Total: 272 passed, 0 failed, 0 skipped.
 ```
 *(Các bài kiểm thử phần cứng/model dùng `[HardwareFact]` sẽ báo `SKIPPED` kèm lý do rõ ràng nếu máy chưa cài mô hình hoặc không có thiết bị âm thanh, không bao giờ báo `PASS` giả).*
 

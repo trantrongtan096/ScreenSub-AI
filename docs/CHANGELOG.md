@@ -7,6 +7,9 @@ Tất cả các thay đổi đáng chú ý của dự án **ScreenSub AI** qua t
 ## [1.0.0-beta.2] - 2026-11-20
 
 ### Tính Năng Mới & Củng Cố Độ Tin Cậy (Release Hardening)
+- **Sửa Lỗi Phóng To Cửa Sổ Dashboard (`Maximize`) & Bố Cục Responsive (`MainWindow`):**
+  - Thêm hook Win32 `WM_GETMINMAXINFO` giới hạn chính xác cửa sổ phóng to theo `MONITORINFO.rcWork` (không tràn sau Taskbar trên DPI `100%–200%` & đa màn hình), hạ `MinHeight="600"` (`MinWidth="1024"`) phù hợp màn hình `1080p @ 150% DPI`, đổi icon `▢` ↔ `❐`.
+  - Tách Header Dashboard thành 2 hàng responsive (5 thẻ KPI chia cột tỷ lệ có `CharacterEllipsis` + `ToolTip`), cân tỷ lệ 3 nút `Bắt đầu dịch / Tạm dừng / Dừng` và bọc dòng cho checkbox `Quick Translate` (không còn đè chữ hay cắt chữ).
 - **Tái Thiết Kế System Tray Context Menu (Fluent Dark Mode):**
   - Loại bỏ hoàn toàn dải trắng bên trái bằng custom WPF `ControlTemplate` (`TrayContextMenuStyle`, `TrayMenuItemStyle`, `TraySeparatorStyle` trong `Theme.xaml`), bảng màu Fluent Dark (`#0F172A`, hover `#1E293B`, border `#334155`), header tùy chỉnh không dùng `MenuItem` disabled với badge trạng thái động (`Đã dừng / Đang dịch / Tạm dừng`), vector icons 17–18px căn thẳng hàng, phím tắt `Ctrl+Alt+Q` căn phải và tự động định vị chống cắt mép trên DPI `100%–200%` & đa màn hình.
 - **Sửa Lỗi Mất Khoảng Trắng OCR Tiếng Anh (RapidOCR Bicubic Small-Crop Enhancement, Không Dùng Từ Điển Bên Ngoài):**
@@ -27,7 +30,7 @@ Tất cả các thay đổi đáng chú ý của dự án **ScreenSub AI** qua t
   - Tách phiên bản bộ cài mới `dist/ScreenSubAI_v1.0.0-beta.2_Setup_x64.exe` (~50,2 MB, `.NET 10 Self-Contained`), bảo toàn bản `v1.0.0-beta.1` (`50,17 MB`, SHA-256: `1F3A6AAAD72CD67CA960095EA0254CCEBB40C77ACD83A2A655FF285A0058528B`) để rollback.
 
 ### Thử Nghiệm & Chất Lượng
-- Đạt **271 / 271 bài kiểm thử tự động vượt qua (100% PASS, 0 Failed, 0 Skipped trên máy đầy đủ phần cứng/model)**: **188 Unit Tests + 83 Integration Tests**.
+- Đạt **272 / 272 bài kiểm thử tự động vượt qua (100% PASS, 0 Failed, 0 Skipped trên máy đầy đủ phần cứng/model)**: **188 Unit Tests + 84 Integration Tests**.
 - Hoàn tất **Soak Test liên tục 60 phút (`60,01` phút)** trên `ScreenSub.Desktop.exe` thật cùng `RapidOCR`, `CTranslate2` (`EnViT5` + `M2M-100`) và `Whisper Base`: `0` crash, `0` worker restart, `0` timeout, `0` GDI/Handle leak.
 - Toàn bộ bài kiểm thử phần cứng dùng `[HardwareFact]` (báo `SKIPPED` kèm lý do rõ ràng nếu thiếu thiết bị/model, không bao giờ báo `PASS` giả).
 

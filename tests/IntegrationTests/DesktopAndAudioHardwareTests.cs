@@ -11,11 +11,15 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FluentAssertions;
+using Moq;
 using ScreenSub.Audio.Capture;
 using ScreenSub.Capture;
 using ScreenSub.Core.Enums;
+using ScreenSub.Core.Interfaces;
 using ScreenSub.Core.Models;
+using ScreenSub.Desktop;
 using ScreenSub.Desktop.Services;
+using ScreenSub.Desktop.ViewModels;
 using ScreenSub.Overlay;
 using Xunit;
 using Xunit.Abstractions;
@@ -415,5 +419,139 @@ public class DesktopAndAudioHardwareTests
         encoder.Frames.Add(BitmapFrame.Create(rtb));
         using var fs = File.Create(filePath);
         encoder.Save(fs);
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetWindowRect(nint hWnd, out SystemTrayManager.RECT lpRect);
+
+    [DllImport("user32.dll")]
+    private static extern nint MonitorFromWindow(nint hWnd, uint dwFlags);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto)]
+    private static extern bool GetMonitorInfo(nint hMonitor, ref MONITORINFO_TEST lpmi);
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
+    private struct MONITORINFO_TEST
+    {
+        public int cbSize;
+        public SystemTrayManager.RECT rcMonitor;
+        public SystemTrayManager.RECT rcWork;
+        public uint dwFlags;
+    }
+
+    [Fact]
+    public void MainWindow_MaximizeAndResponsiveLayout_ShouldClampToWorkAreaAndAvoidClipping()
+    {
+        Exception? staException = null;
+        string artifactDir = Environment.GetEnvironmentVariable("SCREENSUB_TRAY_ARTIFACT_DIR")
+                             ?? Path.Combine(Path.GetTempPath(), "ScreenSubAI_TrayScreenshots");
+        Directory.CreateDirectory(artifactDir);
+        string maxPng = Path.Combine(artifactDir, "dashboard_maximized_verified.png");
+
+        var sta = new Thread(() =>
+        {
+            try
+            {
+                var mockCapture = new Mock<IScreenCaptureService>();
+                mockCapture.Setup(c => c.GetOpenWindows()).Returns([]);
+
+                var mockCoord = new Mock<ISubtitleCoordinator>();
+                mockCoord.SetupGet(c => c.State).Returns(SystemState.Idle);
+                mockCoord.SetupGet(c => c.OutputAudioDevices).Returns([]);
+                mockCoord.SetupGet(c => c.ActiveProviderBadgeText).Returns("OFFLINE AI — LOCAL PROCESSING");
+                mockCoord.SetupGet(c => c.OcrStatusText).Returns("Sẵn sàng (RapidOCR ONNX)");
+                mockCoord.SetupGet(c => c.TranslationStatusText).Returns("Đang kết nối Neural Translation Worker...");
+                mockCoord.SetupGet(c => c.PipelineStatusText).Returns("Sẵn sàng");
+                mockCoord.SetupGet(c => c.SpeechStatusText).Returns("Sẵn sàng");
+
+                var mockSettings = new Mock<ISettingsService>();
+                mockSettings.SetupGet(s => s.Settings).Returns(new AppSettings { MinimizeToTrayOnClose = false });
+                mockSettings.Setup(s => s.GetSecret(It.IsAny<string>())).Returns(string.Empty);
+
+                var overlay = new SubtitleOverlayWindow();
+                var vm = new MainViewModel(
+                    mockCapture.Object,
+                    mockCoord.Object,
+                    mockSettings.Object,
+                    overlay,
+                    () => throw new NotSupportedException());
+
+                // Simulate realistic long status text like in the bug report screenshot
+                vm.OcrStatusText = "Sẵn sàng (RapidOCR ONNX)";
+                vm.TranslationStatusText = "Đang kết nối Neural Translation Worker...";
+
+                var win = new MainWindow(vm)
+                {
+                    ShowActivated = false
+                };
+
+                win.MinHeight.Should().BeLessThanOrEqualTo(600, "1080p at 150% DPI has 680 DIP work area height");
+                win.MinWidth.Should().BeLessThanOrEqualTo(1024);
+
+                win.Show();
+                win.WindowState = WindowState.Maximized;
+                win.UpdateLayout();
+
+                // Pump dispatcher briefly so WM_GETMINMAXINFO + StateChanged + SizeChanged settle
+                var frame = new System.Windows.Threading.DispatcherFrame();
+                var timer = new System.Windows.Threading.DispatcherTimer
+                {
+                    Interval = TimeSpan.FromMilliseconds(250)
+                };
+                timer.Tick += (_, _) => { timer.Stop(); frame.Continue = false; };
+                timer.Start();
+                System.Windows.Threading.Dispatcher.PushFrame(frame);
+
+                nint hwnd = new System.Windows.Interop.WindowInteropHelper(win).Handle;
+                hwnd.Should().NotBe(nint.Zero);
+
+                GetWindowRect(hwnd, out var rcWin).Should().BeTrue();
+                nint mon = MonitorFromWindow(hwnd, 2);
+                var mi = new MONITORINFO_TEST { cbSize = Marshal.SizeOf<MONITORINFO_TEST>() };
+                GetMonitorInfo(mon, ref mi).Should().BeTrue();
+
+                // Must clamp cleanly to monitor work area (never overflow behind taskbar)
+                rcWin.Left.Should().Be(mi.rcWork.Left);
+                rcWin.Top.Should().Be(mi.rcWork.Top);
+                rcWin.Right.Should().Be(mi.rcWork.Right);
+                rcWin.Bottom.Should().Be(mi.rcWork.Bottom);
+
+                // Verify maximize glyph flips to Restore ("❐")
+                var glyph = win.FindName("MaximizeButtonGlyph") as TextBlock;
+                glyph.Should().NotBeNull();
+                glyph!.Text.Should().Be("❐");
+
+                // Render crisp visual snapshot of the maximized RootLayoutGrid for visual verification
+                var rootGrid = win.FindName("RootLayoutGrid") as FrameworkElement;
+                rootGrid.Should().NotBeNull();
+                double wDip = rootGrid!.ActualWidth > 0 ? rootGrid.ActualWidth : 1280;
+                double hDip = rootGrid.ActualHeight > 0 ? rootGrid.ActualHeight : 680;
+                var rtb = new RenderTargetBitmap((int)Math.Ceiling(wDip * 1.5), (int)Math.Ceiling(hDip * 1.5), 144, 144, PixelFormats.Pbgra32);
+                rtb.Render(rootGrid);
+                var enc = new PngBitmapEncoder();
+                enc.Frames.Add(BitmapFrame.Create(rtb));
+                using (var fs = File.Create(maxPng)) enc.Save(fs);
+
+                // Restore back to Normal and verify glyph flips back to "▢"
+                win.WindowState = WindowState.Normal;
+                win.UpdateLayout();
+                glyph.Text.Should().Be("▢");
+
+                win.Close();
+                overlay.Close();
+            }
+            catch (Exception ex)
+            {
+                staException = ex;
+            }
+        });
+
+        sta.SetApartmentState(ApartmentState.STA);
+        sta.Start();
+        sta.Join();
+
+        staException.Should().BeNull();
+        File.Exists(maxPng).Should().BeTrue();
+        new FileInfo(maxPng).Length.Should().BeGreaterThan(20_000);
     }
 }
